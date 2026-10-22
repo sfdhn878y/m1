@@ -3,11 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import redirect,url_for
 
 app = Flask(__name__)
+app.secret_key = 'sdfsfsdfad'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///exam_management.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
-
-
 
 
 class User(db.Model):
@@ -80,23 +80,31 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        user = User.query.filter_by(email=email,password=password).first()
-        session['user_id'] = user.id
-        if user:
-            return render_template('profile.html')
+        user = User.query.filter_by(email=email).first()
+        if user.password == password:
+            session['user_id'] = user.id
+            if user.role == 'admin':
+                return redirect(url_for('admin_dashboard'))
+        
+       
         else:
             return render_template('login.html',error='Invalid email or password')
        
     return render_template('login.html')
 
+@app.route('/logout',methods=['POST','GET'])
+def logout():
+    session.pop('user_id',None)
+    return redirect(url_for('index'))
 
-
-
+@app.route('/admin_dashboard',methods=['POST','GET'])
+def admin_dashboard():
+    return render_template('admin_dashboard.html')
 
 
 @app.route('/')
 def index():
-    return render_template('mypuchui.html')
+    return render_template('index.html')
 
 
 
@@ -105,4 +113,10 @@ def index():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        old_user = User.query.filter_by(email='admin@gmail.com').first()
+        if not old_user:
+            new_admin = User(name='admin',email='admin@gmail.com',password='admin',role='admin')
+            db.session.add(new_admin)
+            db.session.commit()
+
     app.run(debug=True)

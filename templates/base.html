@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+        nav{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+        }
+        nav a{
+            color: #fff;
+            text-decoration: none;
+            padding: 10px;
+        }
+        nav a:hover{
+            background-color: #555;
+        }
+        footer{
+            text-align: center;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+        }
+        footer p{
+            margin: 0;
+    </style>
+    <nav>
+        {% if 'user_id' in session %}
+        <a href="logout">Logout</a>
+       
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        {% endif %}
+    </nav>
+    {% block content %}
+    {% endblock %}
+    <footer>
+        <p>Copyright 2026</p>
+    </footer>
+</body>
+</html>
