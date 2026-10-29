@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Manage Exams</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Exam Name</th>
+            <th>Exam Description</th>
+            <th>Exam Date</th>
+            <th>Exam Time</th>
+            <th>Exam Duration</th>
+            <th>Course Name</th>
+            <th>Examiner Name</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for exam in exams %}
+        <tr>
+            <td>{{ exam.exam_name }}</td>
+            <td>{{ exam.exam_description }}</td>
+            <td>{{ exam.exam_date }}</td>
+            <td>{{ exam.exam_time }}</td>
+            <td>{{ exam.exam_duration }}</td>
+            <td>{{ exam.users.name }}</td>
+            <td>{{ exam.examinor_name }}</td>
+            <td><a href="/create_rubric">create rubic</a></td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="7">No exams found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<form action="/create_exam" method="post">
+    <label for="exam_name">Exam Name</label>
+    <input type="text" name="exam_name" id="exam_name">
+    <label for="exam_description">Exam Description</label>
+    <input type="text" name="exam_description" id="exam_description">
+    <label for="exam_date">Exam Date</label>
+    <input type="date" name="exam_date" id="exam_date">
+    <label for="exam_time">Exam Time</label>
+    <input type="time" name="exam_time" id="exam_time">
+    <label for="exam_duration">Exam Duration</label>
+    <input type="text" name="exam_duration" id="exam_duration">
+    <label for="slot_start_time">Slot Start Time</label>
+    <input type="time" name="slot_start_time" id="slot_start_time">
+    <label for="slot_end_time">Slot End Time</label>
+    <input type="time" name="slot_end_time" id="slot_end_time">
+    <label for="booking_start_time">Booking Start Time</label>
+    <input type="time" name="booking_start_time" id="booking_start_time">
+    <label for="booking_end_time">Booking End Time</label>
+    <input type="time" name="booking_end_time" id="booking_end_time">
+    <select name="examinor_id" id="examinor_id">
+        {% for examinor in examinors %}
+        <option value="{{ examinor.id }}">{{ examinor.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="course_id" id="course_id">
+        {% for course in courses %}
+        <option value="{{ course.id }}">{{ course.coures_name }}</option>
+        {% endfor %}
+    </select>
+   <button type="submit">Create Exam</button>
+</form>
+
+
+{% endblock %}
