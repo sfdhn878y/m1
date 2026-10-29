@@ -2,7 +2,7 @@
 {% block content %}
     <style>
         * { box-sizing: border-box; }
-       
+     
         .card {
             width: 100%;
             max-width: 420px;
@@ -14,7 +14,7 @@
         h1 { margin: 0 0 8px; font-size: 24px; }
         p { margin: 0 0 20px; color: #52606d; }
         label { display: block; margin-bottom: 6px; font-size: 14px; }
-        input, select {
+        input {
             width: 100%;
             padding: 10px 12px;
             margin-bottom: 14px;
@@ -32,17 +32,26 @@
             font-size: 15px;
             cursor: pointer;
         }
+        .error {
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: #fde8e8;
+            color: #9b1c1c;
+            font-size: 14px;
+        }
         .link { margin-top: 16px; text-align: center; font-size: 14px; }
         a { color: #1d4ed8; }
     </style>
 </head>
 <body>
-    <form class="card" action="/register" method="post">
-        <h1>Create account</h1>
-        <p>Register to continue to the exam portal.</p>
+    <form class="card" action="/auth/login" method="post">
+        <h1>Log in</h1>
+        <p>Use your email and password to continue.</p>
 
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" required>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
 
         <label for="email">Email</label>
         <input id="email" name="email" type="email" required>
@@ -50,16 +59,8 @@
         <label for="password">Password</label>
         <input id="password" name="password" type="password" required>
 
-        <label for="role">Role</label>
-        <select id="role" name="role" required>
-            <option value="student">Student</option>
-            <option value="examinor">Examiner</option>
-          
-        </select>
-
-        <button type="submit">Register</button>
-        <div class="link">Already have an account? <a href="/login">Log in</a></div>
+        <button type="submit">Log in</button>
+        <div class="link">New here? <a href="/register">Create an account</a></div>
     </form>
 </body>
 {% endblock %}
-`

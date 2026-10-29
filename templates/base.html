@@ -40,17 +40,17 @@
     </style>
     <nav>
         {% if 'user_id' in session %}
-        <a href="logout">Logout</a>
+        <a href="/logout">Logout</a>
         {% if session['role'] == 'admin' %}
-            <a href="/admin_dashboard">Admin Dashboard</a>
-            <a href="/manage_courses">Manage Courses</a>
-            <a href="/manage_exams">Manage Exams</a>
+            <a href="/admin/admin_dashboard">Admin Dashboard</a>
+            <a href="/admin/manage_courses">Manage Courses</a>
+            <a href="/admin/manage_exams">Manage Exams</a>
 
         {% endif %}
 
         {% else %}
-        <a href="/login">Login</a>
-        <a href="/register">Register</a>
+        <a href="/auth/login">Login</a>
+        <a href="/auth/register">Register</a>
         {% endif %}
     </nav>
     {% block content %}
