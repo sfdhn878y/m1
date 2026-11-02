@@ -36,7 +36,8 @@ def login():
             if user.role == 'admin':
                 return redirect(url_for('admin.admin_dashboard'))
         
-       
+            if user.role =='user':
+                return redirect(url_for('user.user_dashboard'))
         else:
             return render_template('login.html',error='Invalid email or password')
        

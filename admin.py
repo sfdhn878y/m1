@@ -135,7 +135,25 @@ def create_exam():
         courses=courses
     )
 
-@admin_blueprint.route('/create_rubric',methods=['POST','GET'])
-def create_rubric():
+@admin_blueprint.route('/create_rubric/<int:id>',methods=['POST','GET'])
+def create_rubric(id):
+    if request.method == 'POST':
+        question = request.form['question']
+        marks = request.form['marks']
+        exam_id = request.form['exam_id']
+        rubric = quetionBank(question=question,marks=marks,exam_id=exam_id)
+        db.session.add(rubric)
+        db.session.commit()
+        return redirect(url_for('admin.admin_dashboard'))
  
-    return render_template('/admin/create_rubic.html')
+    return render_template('/admin/create_rubic.html',id=id)
+
+
+
+@admin_blueprint.route('/manage_rubric/<int:id>',methods=['POST','GET'])
+def manage_rubric(id):
+    questions = quetionBank.query.filter_by(exam_id=id).all()
+    return render_template('/admin/manage_rubric.html',questions=questions)
+
+
+

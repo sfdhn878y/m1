@@ -1,1 +1,6 @@
-this is rubic page
+<form action="/admin/create_rubric/{{ id }}" method="post">
+   <input placeholder="question" type="text" name = 'question'>
+   <input placeholder="marks" type="text" name = 'marks'>
+   <input type="hidden" name="exam_id" value="{{ id }}">
+   <button type="submit">Create Rubric</button>
+</form>
