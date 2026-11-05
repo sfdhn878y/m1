@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+    <style>
+        .card {
+            width: 100%;
+            max-width: 420px;
+            margin: 24px auto;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 28px;
+        }
+        h1 { margin: 0 0 16px; font-size: 24px; }
+        label { display: block; margin-bottom: 6px; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 11px;
+            border: 0;
+            border-radius: 6px;
+            background: #333;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        button:hover { background: #555; }
+    </style>
+
+    <form class="card" action="/admin/edit_rubric/{{ rubric.id }}" method="post">
+        <h1>Edit Rubric</h1>
+        <label for="question">Question</label>
+        <input id="question" type="text" name="question" value="{{ rubric.question }}">
+        <label for="marks">Marks</label>
+        <input id="marks" type="text" name="marks" value="{{ rubric.marks }}">
+        <button type="submit">Update Rubric</button>
+    </form>
+{% endblock %}

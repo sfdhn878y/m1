@@ -1,4 +1,46 @@
-{% for question in questions %}
-<p>{{ question.question }}</p>
-<p>{{ question.marks }}</p>
-{% endfor %}
+{% extends 'base.html' %}
+{% block content %}
+    <style>
+        .box {
+            max-width: 720px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        h1 { margin: 0 0 16px; font-size: 26px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #333; color: #fff; }
+        td a { color: #333; margin-right: 10px; }
+    </style>
+
+    <div class="box">
+        <h1>Manage Rubric</h1>
+        <table>
+            <tr>
+                <th>Question</th>
+                <th>Marks</th>
+                <th>Actions</th>
+            </tr>
+            {% for question in questions %}
+            <tr>
+                <td>{{ question.question }}</td>
+                <td>{{ question.marks }}</td>
+                <td>
+                    <a href="/admin/edit_rubric/{{ question.id }}">Edit</a>
+                    <a href="/admin/delete_rubric/{{ question.id }}">Delete</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No questions yet.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

@@ -6,8 +6,8 @@ class User(db.Model):
     password = db.Column(db.String(100),nullable=False)
     role = db.Column(db.String(100),nullable=False) # studnet , examinor , admin
 
-
-
+    is_verified = db.Column(db.Boolean,default=False)
+    is_active = db.Column(db.Boolean,default=True)
 
 class User_profile(db.Model):
     id = db.Column(db.Integer,primary_key=True)

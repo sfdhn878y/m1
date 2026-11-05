@@ -31,12 +31,19 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(email=email).first()
         if user.password == password:
+            if user.role != 'admin' and user.is_active is False:
+                return "your account is blocked"
             session['user_id'] = user.id
             session['role'] = user.role
             if user.role == 'admin':
                 return redirect(url_for('admin.admin_dashboard'))
-        
-            if user.role =='user':
+            if user.role == 'examinor' and user.is_verified == True:
+
+
+                return redirect(url_for('examior.examior_dashboard'))
+            elif user.role == 'examinor' and user.is_verified == False:
+                return "you are not verified"
+            if user.role =='student':
                 return redirect(url_for('user.user_dashboard'))
         else:
             return render_template('login.html',error='Invalid email or password')

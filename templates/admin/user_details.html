@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+    <style>
+        .box {
+            max-width: 720px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        h1 { margin: 0 0 16px; font-size: 26px; }
+        .row { margin: 0 0 8px; font-size: 14px; }
+        .row span { display: inline-block; width: 140px; color: #555; }
+        .back { display: inline-block; margin-top: 16px; color: #333; }
+    </style>
+
+    <div class="box">
+        <h1>User Details</h1>
+        <p class="row"><span>Name</span>{{ user.name }}</p>
+        <p class="row"><span>Email</span>{{ user.email }}</p>
+        <p class="row"><span>Role</span>{{ user.role }}</p>
+        {% if profile %}
+        <p class="row"><span>Address</span>{{ profile.address }}</p>
+        <p class="row"><span>Phone</span>{{ profile.phone }}</p>
+        <p class="row"><span>Past experience</span>{{ profile.past_experience }}</p>
+        {% else %}
+        <p class="row"><span>Profile</span>No profile saved yet.</p>
+        {% endif %}
+        <a class="back" href="/admin/manage_users">Back to users</a>
+    </div>
+{% endblock %}

@@ -1,20 +1,20 @@
-from flask import Flask,render_template,jsonify,request,session
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask,render_template,session
 from flask import redirect,url_for
-from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'sdfsfsdfad'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///exam_management.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-from flask import Blueprint
+
 from extension import db
 from auth import auth_blueprint
 from models import *
 from admin import admin_blueprint
-
+from examinor import examior_blueprint
+from user import user_blueprint
 app.register_blueprint(auth_blueprint,url_prefix='/auth')
 app.register_blueprint(admin_blueprint,url_prefix='/admin')
-
+app.register_blueprint(examior_blueprint,url_prefix='/examior')
+app.register_blueprint(user_blueprint,url_prefix='/user')
 db.init_app(app)
 
 

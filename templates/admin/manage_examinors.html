@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Manage Examinors{% endblock %}
+{% block content %}
+<h1>Manage Examinors</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Is Verified</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    {% for examinor in examinors %}
+    <tr>
+        <td>{{ examinor.name }}</td>
+        <td>{{ examinor.email }}</td>
+        <td>{{ examinor.role }}</td>
+        <td>{{ examinor.is_verified }}</td>
+        <td>{% if examinor.is_active %}Active{% else %}Blocked{% endif %}</td>
+        <td>
+            <a href="/admin/approve_examinor/{{ examinor.id }}">Approve</a>
+            {% if examinor.is_active %}
+            <a href="/admin/block_user/{{ examinor.id }}">Block</a>
+            {% else %}
+            <a href="/admin/unblock_user/{{ examinor.id }}">Unblock</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

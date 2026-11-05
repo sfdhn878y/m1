@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+    <style>
+        .box {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        h1 { margin: 0 0 16px; font-size: 26px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #333; color: #fff; }
+        td a { color: #333; }
+        .top { margin-bottom: 16px; }
+        .top a {
+            display: inline-block;
+            padding: 10px 14px;
+            background: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+
+    <div class="box">
+        <h1>Manage Users</h1>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role }}</td>
+                <td>{% if user.is_active %}Active{% else %}Blocked{% endif %}</td>
+                <td>
+                    <a href="/admin/user_details/{{ user.id }}">Details</a>
+                    {% if user.is_active %}
+                    <a href="/admin/block_user/{{ user.id }}">Block</a>
+                    {% else %}
+                    <a href="/admin/unblock_user/{{ user.id }}">Unblock</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

@@ -1,26 +1,47 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Manage Courses</h1>
+    <style>
+        .box {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        h1 { margin: 0 0 16px; font-size: 26px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #333; color: #fff; }
+        td a {
+            color: #333;
+            margin-right: 10px;
+        }
+    </style>
 
-<table>
-    <tr>
-        <th>Course Name</th>
-        <th>Description</th>
-        <th>Duration</th>
-        <th>Actions</th>
-    </tr>
-    {% for course in courses %}
-    <tr>
-        <td>{{ course.coures_name }}</td>
-        <td>{{ course.coures_description }}</td>
-        <td>{{ course.course_duration }}</td>
-        <td>
-
-            <a href="/edit_course/{{ course.id }}">Edit</a>
-            <a href="/delete/{{ course.id }}">Delete</a>
-
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+    <div class="box">
+        <h1>Manage Courses</h1>
+        <table>
+            <tr>
+                <th>Course Name</th>
+                <th>Description</th>
+                <th>Duration</th>
+                <th>Actions</th>
+            </tr>
+            {% for course in courses %}
+            <tr>
+                <td>{{ course.coures_name }}</td>
+                <td>{{ course.coures_description }}</td>
+                <td>{{ course.course_duration }}</td>
+                <td>
+                    <a href="/admin/edit_course/{{ course.id }}">Edit</a>
+                    <a href="/admin/delete/{{ course.id }}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 {% endblock %}

@@ -1,36 +1,71 @@
 {% extends 'base.html' %}
 {% block content %}
-<form action="/admin/create_exam" method="post">
-    <label for="exam_name">Exam Name</label>
-    <input type="text" name="exam_name" id="exam_name">
-    <label for="exam_description">Exam Description</label>
-    <input type="text" name="exam_description" id="exam_description">
-    <label for="exam_date">Exam Date</label>
-    <input type="date" name="exam_date" id="exam_date">
-    <label for="exam_time">Exam Time</label>
-    <input type="time" name="exam_time" id="exam_time">
-    <label for="exam_duration">Exam Duration</label>
-    <input type="text" name="exam_duration" id="exam_duration">
-    <label for="slot_start_time">Slot Start Time</label>
-    <input type="time" name="slot_start_time" id="slot_start_time">
-    <label for="slot_end_time">Slot End Time</label>
-    <input type="time" name="slot_end_time" id="slot_end_time">
-    <label for="booking_start_time">Booking Start Time</label>
-    <input type="time" name="booking_start_time" id="booking_start_time">
-    <label for="booking_end_time">Booking End Time</label>
-    <input type="time" name="booking_end_time" id="booking_end_time">
-    <select name="examinor_id" id="examinor_id">
-        {% for examinor in examinors %}
-        <option value="{{ examinor.id }}">{{ examinor.name }}</option>
-        {% endfor %}
-    </select>
-    <select name="course_id" id="course_id">
-        {% for course in courses %}
-        <option value="{{ course.id }}">{{ course.coures_name }}</option>
-        {% endfor %}
-    </select>
-   <button type="submit">Create Exam</button>
-</form>
+    <style>
+        .card {
+            width: 100%;
+            max-width: 420px;
+            margin: 24px auto;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 28px;
+        }
+        h1 { margin: 0 0 16px; font-size: 24px; }
+        label { display: block; margin-bottom: 6px; font-size: 14px; }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 11px;
+            border: 0;
+            border-radius: 6px;
+            background: #333;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        button:hover { background: #555; }
+    </style>
 
-
+    <form class="card" action="/admin/create_exam" method="post">
+        <h1>Create Exam</h1>
+        <label for="exam_name">Exam Name</label>
+        <input type="text" name="exam_name" id="exam_name">
+        <label for="exam_description">Exam Description</label>
+        <input type="text" name="exam_description" id="exam_description">
+        <label for="exam_date">Exam Date</label>
+        <input type="date" name="exam_date" id="exam_date">
+        <label for="exam_time">Exam Time</label>
+        <input type="time" name="exam_time" id="exam_time">
+        <label for="exam_duration">Exam Duration</label>
+        <input type="text" name="exam_duration" id="exam_duration">
+        <label for="slot_start_time">Slot Start Time</label>
+        <input type="time" name="slot_start_time" id="slot_start_time">
+        <label for="slot_end_time">Slot End Time</label>
+        <input type="time" name="slot_end_time" id="slot_end_time">
+        <label for="booking_start_time">Booking Start Time</label>
+        <input type="time" name="booking_start_time" id="booking_start_time">
+        <label for="booking_end_time">Booking End Time</label>
+        <input type="time" name="booking_end_time" id="booking_end_time">
+        <label for="examinor_id">Examiner</label>
+        <select name="examinor_id" id="examinor_id">
+            {% for examinor in examinors %}
+            <option value="{{ examinor.id }}">{{ examinor.name }}</option>
+            {% endfor %}
+        </select>
+        <label for="course_id">Course</label>
+        <select name="course_id" id="course_id">
+            {% for course in courses %}
+            <option value="{{ course.id }}">{{ course.coures_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Create Exam</button>
+    </form>
 {% endblock %}

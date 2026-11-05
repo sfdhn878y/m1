@@ -9,7 +9,17 @@ admin_blueprint = Blueprint('admin',__name__)
 
 @admin_blueprint.route('/admin_dashboard',methods=['POST','GET'])
 def admin_dashboard():
-    return render_template('/admin/admin_dashboard.html')
+    course_count = Course.query.count()
+    exam_count = Exam.query.count()
+    student_count = User.query.filter_by(role='student').count()
+    examinor_count = User.query.filter_by(role='examinor').count()
+    return render_template(
+        '/admin/admin_dashboard.html',
+        course_count=course_count,
+        exam_count=exam_count,
+        student_count=student_count,
+        examinor_count=examinor_count
+    )
 
 
 
@@ -60,10 +70,14 @@ def create_course():
 
 @admin_blueprint.route('/delete/<int:id>',methods=['POST','GET'])
 def delete(id):
+    exams = Exam.query.filter_by(coures_id=id).all()
+    for exam in exams:
+        quetionBank.query.filter_by(exam_id=exam.id).delete()
+        db.session.delete(exam)
     course = Course.query.get(id)
     db.session.delete(course)
     db.session.commit()
-    return redirect(url_for('manage_courses'))
+    return redirect(url_for('admin.manage_courses'))
 
 from datetime import datetime
 from flask import request, render_template, redirect, url_for
@@ -153,7 +167,119 @@ def create_rubric(id):
 @admin_blueprint.route('/manage_rubric/<int:id>',methods=['POST','GET'])
 def manage_rubric(id):
     questions = quetionBank.query.filter_by(exam_id=id).all()
-    return render_template('/admin/manage_rubric.html',questions=questions)
+    return render_template('/admin/manage_rubric.html',questions=questions,exam_id=id)
+
+
+@admin_blueprint.route('/edit_rubric/<int:id>', methods=['POST', 'GET'])
+def edit_rubric(id):
+    rubric = quetionBank.query.get(id)
+    if request.method == 'POST':
+        rubric.question = request.form['question']
+        rubric.marks = request.form['marks']
+        db.session.commit()
+        return redirect(url_for('admin.manage_rubric', id=rubric.exam_id))
+    return render_template('/admin/edit_rubric.html', rubric=rubric)
+
+
+@admin_blueprint.route('/delete_rubric/<int:id>', methods=['POST', 'GET'])
+def delete_rubric(id):
+    rubric = quetionBank.query.get(id)
+    exam_id = rubric.exam_id
+    db.session.delete(rubric)
+    db.session.commit()
+    return redirect(url_for('admin.manage_rubric', id=exam_id))
+
+
+@admin_blueprint.route('/edit_exam/<int:id>', methods=['POST', 'GET'])
+def edit_exam(id):
+    exam = Exam.query.get(id)
+    examinors = User.query.filter_by(role='examinor').all()
+    courses = Course.query.all()
+
+    if request.method == 'POST':
+        exam.exam_name = request.form['exam_name']
+        exam.exam_description = request.form['exam_description']
+        exam.exam_date = datetime.strptime(request.form['exam_date'], '%Y-%m-%d').date()
+        exam.exam_time = datetime.strptime(request.form['exam_time'], '%H:%M').time()
+        exam.slot_start_time = datetime.strptime(request.form['slot_start_time'], '%H:%M').time()
+        exam.slot_end_time = datetime.strptime(request.form['slot_end_time'], '%H:%M').time()
+        exam.booking_start_time = datetime.strptime(request.form['booking_start_time'], '%H:%M').time()
+        exam.booking_end_time = datetime.strptime(request.form['booking_end_time'], '%H:%M').time()
+        exam.exam_duration = int(request.form['exam_duration'])
+        examinor_id = int(request.form['examinor_id'])
+        user = User.query.get(examinor_id)
+        exam.examinor_id = examinor_id
+        exam.examinor_name = user.name
+        exam.coures_id = int(request.form['course_id'])
+        db.session.commit()
+        return redirect(url_for('admin.manage_exams'))
+
+    return render_template(
+        '/admin/edit_exam.html',
+        exam=exam,
+        examinors=examinors,
+        courses=courses
+    )
+
+
+@admin_blueprint.route('/delete_exam/<int:id>', methods=['POST', 'GET'])
+def delete_exam(id):
+    quetionBank.query.filter_by(exam_id=id).delete()
+    exam = Exam.query.get(id)
+    db.session.delete(exam)
+    db.session.commit()
+    return redirect(url_for('admin.manage_exams'))
 
 
 
+@admin_blueprint.route('/manage_examinors',methods=['POST','GET'])
+def manage_examinors():
+    examinors = User.query.filter_by(role='examinor').all()
+    return render_template('/admin/manage_examinors.html',examinors=examinors)
+
+
+@admin_blueprint.route('/edit_examinor/<int:id>',methods=['POST','GET'])
+def edit_examinor(id):
+    examinor = User.query.get(id)
+    return render_template('/admin/edit_examinor.html',examinor=examinor)
+@admin_blueprint.route('/approve_examinor/<int:id>',methods=['POST','GET'])
+def approve_examinor(id):
+    examinor = User.query.get(id)
+    examinor.is_verified = True
+    db.session.commit()
+    return redirect(url_for('admin.manage_examinors'))
+
+
+@admin_blueprint.route('/manage_users',methods=['POST','GET'])
+def manage_users():
+    users = User.query.filter(User.role.in_(['student'])).all()
+    return render_template('/admin/manage_users.html', users=users)
+
+
+
+
+@admin_blueprint.route('/user_details/<int:id>',methods=['GET'])
+def user_details(id):
+    user = User.query.get(id)
+    profile = User_profile.query.filter_by(user_id=id).first()
+    return render_template('/admin/user_details.html', user=user, profile=profile)
+
+
+@admin_blueprint.route('/block_user/<int:id>')
+def block_user(id):
+    user = User.query.get(id)
+    user.is_active = False
+    db.session.commit()
+    if user.role == 'examinor':
+        return redirect(url_for('admin.manage_examinors'))
+    return redirect(url_for('admin.manage_users'))
+
+
+@admin_blueprint.route('/unblock_user/<int:id>')
+def unblock_user(id):
+    user = User.query.get(id)
+    user.is_active = True
+    db.session.commit()
+    if user.role == 'examinor':
+        return redirect(url_for('admin.manage_examinors'))
+    return redirect(url_for('admin.manage_users'))

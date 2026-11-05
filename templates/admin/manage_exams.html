@@ -1,41 +1,65 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<h1>Manage Exams</h1>
+    <style>
+        .box {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+            overflow-x: auto;
+        }
+        h1 { margin: 0 0 16px; font-size: 26px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #333; color: #fff; }
+        td a { color: #333; }
+    </style>
 
-<table>
-    <thead>
-        <tr>
-            <th>Exam Name</th>
-            <th>Exam Description</th>
-            <th>Exam Date</th>
-            <th>Exam Time</th>
-            <th>Exam Duration</th>
-            <th>Course Name</th>
-            <th>Examiner Name</th>
-            <th>Create Rubric</th>
-            <th>Manage Rubric</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% for exam in exams %}
-        <tr>
-            <td>{{ exam.exam_name }}</td>
-            <td>{{ exam.exam_description }}</td>
-            <td>{{ exam.exam_date }}</td>
-            <td>{{ exam.exam_time }}</td>
-            <td>{{ exam.exam_duration }}</td>
-            <td>{{ exam.users.name }}</td>
-            <td>{{ exam.examinor_name }}</td>
-            <td><a href="/admin/create_rubric/{{ exam.id }}">create rubic</a></td>
-            <td><a href="/admin/manage_rubric/{{ exam.id }}">manage rubic</a></td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="7">No exams found.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="box">
+        <h1>Manage Exams</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Exam Name</th>
+                    <th>Exam Description</th>
+                    <th>Exam Date</th>
+                    <th>Exam Time</th>
+                    <th>Exam Duration</th>
+                    <th>Course Name</th>
+                    <th>Examiner Name</th>
+                    <th>Create Rubric</th>
+                    <th>Manage Rubric</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam in exams %}
+                <tr>
+                    <td>{{ exam.exam_name }}</td>
+                    <td>{{ exam.exam_description }}</td>
+                    <td>{{ exam.exam_date }}</td>
+                    <td>{{ exam.exam_time }}</td>
+                    <td>{{ exam.exam_duration }}</td>
+                    <td>{{ exam.users.name }}</td>
+                    <td>{{ exam.examinor_name }}</td>
+                    <td><a href="/admin/create_rubric/{{ exam.id }}">create rubic</a></td>
+                    <td><a href="/admin/manage_rubric/{{ exam.id }}">manage rubic</a></td>
+                    <td>
+                        <a href="/admin/edit_exam/{{ exam.id }}">Edit</a>
+                        <a href="/admin/delete_exam/{{ exam.id }}">Delete</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10">No exams found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

@@ -1,5 +1,46 @@
-
 {% extends 'base.html' %}
 {% block content %}
-this is my index page
+    <style>
+        .box {
+            max-width: 720px;
+            margin: 24px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        h1 { margin: 0 0 10px; font-size: 26px; }
+        h2 { margin: 18px 0 8px; font-size: 18px; }
+        p { margin: 0 0 10px; color: #333; }
+        a { color: #1d4ed8; }
+        ul { margin: 0 0 10px; padding-left: 20px; color: #333; }
+        li { margin-bottom: 6px; }
+    </style>
+
+    <div class="box">
+        <h1>Welcome</h1>
+        <p>This is the exam management home page. Teachers and admins can keep courses, exams, and marks in one place. Use Login or Register from the top to continue.</p>
+
+        <h2>About this site</h2>
+        <p>The site is made for a small college setup. An admin creates courses, adds exams for those courses, and sets a rubric so marking stays clear. Students and staff sign in with their own account.</p>
+
+        <h2>What you can do</h2>
+        <ul>
+            <li>Register a new account or log in with your email and password.</li>
+            <li>Admins open the dashboard to manage courses and exams.</li>
+            <li>Create a course, then edit or remove it later if the details change.</li>
+            <li>Create an exam for a course and attach a rubric for checking answers.</li>
+            <li>Log out from the top menu when you are done.</li>
+        </ul>
+
+        <h2>How to get started</h2>
+        <p>New users should register first. After login, an admin can go to Manage Courses and add a course name. From Manage Exams, add an exam and open the rubric page if you want marking points saved with that exam.</p>
+
+        <h2>Contact us</h2>
+        <p>Need help with login, a missing course, or an exam that will not open? Write to <a href="mailto:admin@gmail.com">admin@gmail.com</a>. Please include your name, email, and a short note about the problem so we can reply faster.</p>
+        <p>Office hours: Monday to Friday, 9:00 am to 5:00 pm.</p>
+
+        <h2>Feedback</h2>
+        <p>We like to hear from you. Send feedback, ideas, or bugs to the same email. Tell us which page you were on and what you expected to happen.</p>
+        <p>Good feedback helps us fix login issues, course lists, and exam pages. Thank you for using the site.</p>
+    </div>
 {% endblock %}
