@@ -44,12 +44,32 @@ class Exam(db.Model):
     exam_duration = db.Column(db.Integer,nullable=False)
     slot_start_time = db.Column(db.Time,nullable=False)
     slot_end_time = db.Column(db.Time,nullable=False)
+    slot_creation_start_date = db.Column(db.Date,nullable=True)
+    slot_creation_end_date = db.Column(db.Date,nullable=True)
     booking_start_time = db.Column(db.Time,nullable=False)
     booking_end_time = db.Column(db.Time,nullable=False)
+    booking_open_date = db.Column(db.Date,nullable=True)
+    booking_close_date = db.Column(db.Date,nullable=True)
+    is_booking_open = db.Column(db.Boolean, default=False)
+    results_published = db.Column(db.Boolean, default=False)
     examinor_name = db.Column(db.String(100),nullable=False)
     coures_id = db.Column(db.Integer,db.ForeignKey('course.id'),nullable=False)
     examinor_id = db.Column(db.Integer,db.ForeignKey('user.id'),nullable=False)
     users = db.relationship('User',backref='exams',lazy=True)
+
+
+class ExamSlot(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
+    slot_date = db.Column(db.Date, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+
+class SlotBooking(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    slot_id = db.Column(db.Integer, db.ForeignKey('exam_slot.id'), nullable=False, unique=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
 class quetionBank(db.Model):
@@ -57,3 +77,20 @@ class quetionBank(db.Model):
     question = db.Column(db.String(100),nullable=False)
     marks = db.Column(db.Integer,nullable=False)
     exam_id = db.Column(db.Integer,db.ForeignKey('exam.id'),nullable=False)
+
+
+class StudentMark(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('quetion_bank.id'), nullable=False)
+    marks_awarded = db.Column(db.Integer, nullable=False)
+    given_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+
+class ExamRemark(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    remark = db.Column(db.String(500), nullable=False)
+    given_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

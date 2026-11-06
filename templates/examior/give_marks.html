@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 760px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 14px; color: #333; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th { background: #333; color: #fff; }
+    input, textarea {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+    input { width: 90px; }
+    textarea { width: 100%; min-height: 90px; margin-top: 8px; }
+    label { display: block; margin-top: 16px; font-size: 14px; }
+    button, .links a {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 10px 14px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    button:hover, .links a:hover { background: #555; }
+    .links a { margin-left: 8px; }
+    .error {
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border: 1px solid #c0392b;
+        background: #fdecea;
+        color: #922b21;
+    }
+</style>
+
+<div class="box">
+    <h1>Give marks</h1>
+    <p>{{ exam.exam_name }} — {{ exam.exam_date }} at {{ exam.exam_time.strftime('%H:%M') }}</p>
+    <p>Student: {{ student.name }} ({{ student.email }})</p>
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+    {% if questions %}
+    <form method="post">
+        <table>
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Out of</th>
+                    <th>Marks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for question in questions %}
+                <tr>
+                    <td>{{ question.question }}</td>
+                    <td>{{ question.marks }}</td>
+                    <td>
+                        <input
+                            type="number"
+                            name="marks_{{ question.id }}"
+                            min="0"
+                            max="{{ question.marks }}"
+                            value="{{ saved[question.id].marks_awarded if saved.get(question.id) else '' }}"
+                            required
+                        >
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <label for="remark">Remark</label>
+        <textarea name="remark" id="remark">{{ remark.remark if remark else '' }}</textarea>
+        <button type="submit">Submit marks</button>
+        <span class="links"><a href="/examior/see_bookings">Back to bookings</a></span>
+    </form>
+    {% else %}
+    <p>The admin has not added a rubric for this exam yet.</p>
+    <div class="links"><a href="/examior/see_bookings">Back to bookings</a></div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -2,9 +2,14 @@
 {% block title %}Manage Examinors{% endblock %}
 {% block content %}
 <h1>Manage Examinors</h1>
+<form action="/admin/manage_examinors" method="get">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="Search examiners by name or ID">
+    <button type="submit">Search</button>
+</form>
 <table>
     <thead>
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Role</th>
@@ -15,6 +20,7 @@
     </thead>
     {% for examinor in examinors %}
     <tr>
+        <td>{{ examinor.id }}</td>
         <td>{{ examinor.name }}</td>
         <td>{{ examinor.email }}</td>
         <td>{{ examinor.role }}</td>
@@ -28,6 +34,10 @@
             <a href="/admin/unblock_user/{{ examinor.id }}">Unblock</a>
             {% endif %}
         </td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="7">No examiners match that name or ID.</td>
     </tr>
     {% endfor %}
 </table>

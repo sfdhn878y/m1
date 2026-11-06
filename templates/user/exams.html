@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 1000px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+        overflow-x: auto;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 16px; color: #333; }
+    form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    input, select {
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    input[type="search"] { flex: 1; min-width: 180px; }
+    button, td a {
+        display: inline-block;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 4px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #333; color: #fff; }
+    td a { margin: 0 6px 6px 0; }
+</style>
+
+<div class="box">
+    <h1>Examinations</h1>
+    <p>Search by exam name or ID, then filter by course, booking, or date.</p>
+    <form action="/user/exams" method="get">
+        <input type="search" name="q" value="{{ q or '' }}" placeholder="Exam name or ID">
+        <select name="course">
+            <option value="">All courses</option>
+            {% for course in courses %}
+            <option value="{{ course.id }}" {% if course_filter == course.id|string %}selected{% endif %}>{{ course.coures_name }}</option>
+            {% endfor %}
+        </select>
+        <select name="booking">
+            <option value="all" {% if booking_filter == 'all' %}selected{% endif %}>All booking</option>
+            <option value="open" {% if booking_filter == 'open' %}selected{% endif %}>Available</option>
+            <option value="closed" {% if booking_filter == 'closed' %}selected{% endif %}>Closed</option>
+        </select>
+        <select name="when">
+            <option value="all" {% if when_filter == 'all' %}selected{% endif %}>All dates</option>
+            <option value="upcoming" {% if when_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+            <option value="past" {% if when_filter == 'past' %}selected{% endif %}>Past</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Exam</th>
+                <th>Course</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Booking</th>
+                <th>Slots</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td>{{ exam.id }}</td>
+                <td>{{ exam.exam_name }}</td>
+                <td>{{ course_map[exam.coures_id].coures_name if course_map.get(exam.coures_id) else exam.coures_id }}</td>
+                <td>{{ exam.exam_date }}</td>
+                <td>{{ exam.exam_time.strftime('%H:%M') }}</td>
+                <td>{% if exam.is_booking_open %}Available{% else %}Closed{% endif %}</td>
+                <td>
+                    {% if exam.id in booked_exam_ids %}
+                    Booked
+                    {% else %}
+                        {% for slot in slots_by_exam.get(exam.id, []) %}
+                            {% if exam.is_booking_open %}
+                            <a href="/user/book_slot/{{ slot.id }}">Book {{ slot.slot_date }}</a>
+                            {% else %}
+                            {{ slot.slot_date }}
+                            {% endif %}
+                        {% else %}
+                        No open slot
+                        {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">No examinations match that search.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

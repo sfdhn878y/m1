@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+        overflow-x: auto;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 16px; color: #333; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th { background: #333; color: #fff; }
+</style>
+
+<div class="box">
+    <h1>See Bookings</h1>
+    <p>Students who booked a slot for your exams.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Exam</th>
+                <th>Exam date</th>
+                <th>Exam time</th>
+                <th>Slot date</th>
+                <th>Student</th>
+                <th>Email</th>
+                <th>Marks</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ exam_map[booking.exam_id].exam_name if exam_map.get(booking.exam_id) else booking.exam_id }}</td>
+                <td>{{ exam_map[booking.exam_id].exam_date if exam_map.get(booking.exam_id) else '' }}</td>
+                <td>{{ exam_map[booking.exam_id].exam_time.strftime('%H:%M') if exam_map.get(booking.exam_id) else '' }}</td>
+                <td>{{ slot_map[booking.slot_id].slot_date if slot_map.get(booking.slot_id) else '' }}</td>
+                <td>{{ student_map[booking.student_id].name if student_map.get(booking.student_id) else booking.student_id }}</td>
+                <td>{{ student_map[booking.student_id].email if student_map.get(booking.student_id) else '' }}</td>
+                <td>
+                    {% if mark_summary[booking.id].awarded is not none %}
+                    {{ mark_summary[booking.id].awarded }} / {{ mark_summary[booking.id].possible }}
+                    {% else %}
+                    Not given
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/examior/view_booking/{{ booking.id }}">View</a>
+                    <a href="/examior/give_marks/{{ booking.id }}">Give marks</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8">No students have booked a slot yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

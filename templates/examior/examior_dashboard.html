@@ -2,7 +2,7 @@
 {% block content %}
     <style>
         .box {
-            max-width: 720px;
+            max-width: 960px;
             margin: 24px auto;
             padding: 20px;
             border: 1px solid #ccc;
@@ -29,6 +29,15 @@
         .profile h2 { margin: 0 0 10px; font-size: 16px; }
         .row { margin: 0 0 6px; font-size: 14px; }
         .row span { display: inline-block; width: 140px; color: #555; }
+        h2 { margin: 22px 0 10px; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: #333; color: #fff; }
+        td a { color: #333; }
     </style>
 
     <div class="box">
@@ -51,5 +60,77 @@
             <a href="/examior/create_profile">Create profile</a>
         </div>
         {% endif %}
+
+        <h2>Create slots</h2>
+        <p>You can create a slot only between the start and end dates the admin set for that exam.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Date</th>
+                    <th>Slot creation dates</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam in assigned_exams %}
+                <tr>
+                    <td>{{ exam.exam_name }}</td>
+                    <td>{{ exam.exam_date }}</td>
+                    <td>
+                        {% if exam.slot_creation_start_date and exam.slot_creation_end_date %}
+                        {{ exam.slot_creation_start_date }} – {{ exam.slot_creation_end_date }}
+                        {% else %}
+                        Not set by admin
+                        {% endif %}
+                    </td>
+                    <td><a href="/examior/provide_slot/{{ exam.id }}">Create slot</a></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4">No exams are assigned to you yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Booked slots</h2>
+        <p>These are the slots students have booked for your exams. The full list is also under See Bookings.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Exam date</th>
+                    <th>Exam time</th>
+                    <th>Slot date</th>
+                    <th>Student</th>
+                    <th>Email</th>
+                    <th>Marks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ exam_map[booking.exam_id].exam_name if exam_map.get(booking.exam_id) else booking.exam_id }}</td>
+                    <td>{{ exam_map[booking.exam_id].exam_date if exam_map.get(booking.exam_id) else '' }}</td>
+                    <td>{{ exam_map[booking.exam_id].exam_time.strftime('%H:%M') if exam_map.get(booking.exam_id) else '' }}</td>
+                    <td>{{ slot_map[booking.slot_id].slot_date if slot_map.get(booking.slot_id) else '' }}</td>
+                    <td>{{ student_map[booking.student_id].name if student_map.get(booking.student_id) else booking.student_id }}</td>
+                    <td>{{ student_map[booking.student_id].email if student_map.get(booking.student_id) else '' }}</td>
+                    <td>
+                        {% if mark_summary[booking.id].awarded is not none %}
+                        <a href="/examior/give_marks/{{ booking.id }}">{{ mark_summary[booking.id].awarded }} / {{ mark_summary[booking.id].possible }}</a>
+                        {% else %}
+                        <a href="/examior/give_marks/{{ booking.id }}">Give marks</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7">No students have booked a slot yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 {% endblock %}

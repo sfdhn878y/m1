@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 760px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    h2 { margin: 22px 0 8px; font-size: 18px; }
+    p { margin: 0 0 14px; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th { background: #333; color: #fff; }
+    .total { margin: 0 0 8px; font-weight: bold; }
+</style>
+
+<div class="box">
+    <h1>Results and feedback</h1>
+    <p>Published marks and the examiner's remark for your exams.</p>
+    {% for exam in exams %}
+    <h2>{{ exam.exam_name }}</h2>
+    <p>{{ exam.exam_date }} at {{ exam.exam_time.strftime('%H:%M') }}</p>
+    {% if not exam.results_published %}
+    <p>Results are not published yet.</p>
+    {% else %}
+    {% set questions = questions_by_exam.get(exam.id, []) %}
+    {% if questions %}
+    <table>
+        <thead>
+            <tr>
+                <th>Question</th>
+                <th>Your marks</th>
+                <th>Out of</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set ns = namespace(awarded=0, given=false) %}
+            {% for question in questions %}
+            <tr>
+                <td>{{ question.question }}</td>
+                <td>
+                    {% if marks_by_question.get(question.id) is not none %}
+                    {% set ns.given = true %}
+                    {% set ns.awarded = ns.awarded + marks_by_question[question.id] %}
+                    {{ marks_by_question[question.id] }}
+                    {% else %}
+                    Not given
+                    {% endif %}
+                </td>
+                <td>{{ question.marks }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="total">
+        Total:
+        {% if ns.given %}
+        {{ ns.awarded }} / {{ questions|sum(attribute='marks') }}
+        {% else %}
+        Not given yet
+        {% endif %}
+    </p>
+    <p>Feedback: {{ remarks.get(exam.id) or 'No feedback yet' }}</p>
+    {% else %}
+    <p>No rubric has been added for this exam.</p>
+    {% endif %}
+    {% endif %}
+    {% else %}
+    <p>You have no exams yet. Book a slot, and your marks will appear here after the examiner enters them.</p>
+    {% endfor %}
+</div>
+{% endblock %}

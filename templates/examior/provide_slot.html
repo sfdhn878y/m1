@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 14px; color: #333; }
+    .window {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+        background: #f7f7f7;
+    }
+    label { display: block; margin-bottom: 6px; font-size: 14px; }
+    input {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+    button, .links a {
+        display: inline-block;
+        padding: 10px 14px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    button:hover, .links a:hover { background: #555; }
+    .error {
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border: 1px solid #c0392b;
+        background: #fdecea;
+        color: #922b21;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th { background: #333; color: #fff; }
+    td a { color: #333; }
+    h2 { margin: 22px 0 10px; font-size: 18px; }
+    .links { margin-top: 16px; }
+</style>
+
+<div class="box">
+    <h1>Create Slot</h1>
+    <p>{{ exam.exam_name }} — {{ exam.exam_date }}</p>
+    {% if exam.slot_creation_start_date and exam.slot_creation_end_date %}
+    <div class="window">
+        Admin allowed dates:
+        <strong>{{ exam.slot_creation_start_date }}</strong>
+        to
+        <strong>{{ exam.slot_creation_end_date }}</strong>.
+        A slot is saved only when the selected date is inside this period.
+    </div>
+    {% else %}
+    <p class="error">The admin has not set the slot creation dates for this exam yet.</p>
+    {% endif %}
+
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if creation_open %}
+    <form action="/examior/provide_slot/{{ exam.id }}" method="post">
+        <label for="slot_date">Slot date</label>
+        <input
+            type="date"
+            name="slot_date"
+            id="slot_date"
+            min="{{ exam.slot_creation_start_date }}"
+            max="{{ exam.slot_creation_end_date }}"
+            required
+        >
+        <button type="submit">Create slot</button>
+    </form>
+    {% elif exam.slot_creation_start_date and exam.slot_creation_end_date %}
+    <p class="error">Slot creation is open only from {{ exam.slot_creation_start_date }} to {{ exam.slot_creation_end_date }}.</p>
+    {% endif %}
+
+    <h2>Slots you created</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Booked by</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for slot in slots %}
+            <tr>
+                <td>{{ slot.slot_date }}</td>
+                <td>
+                    {% set booking = booking_by_slot.get(slot.id) %}
+                    {% if booking and student_map.get(booking.student_id) %}
+                    {{ student_map[booking.student_id].name }} ({{ student_map[booking.student_id].email }})
+                    {% else %}
+                    Not booked
+                    {% endif %}
+                </td>
+                <td>
+                    {% if booking %}
+                    Booked
+                    {% elif booking_started %}
+                    Booking has started
+                    {% else %}
+                    <a href="/examior/edit_slot/{{ slot.id }}">Update</a>
+                    <a href="/examior/delete_slot/{{ slot.id }}">Remove</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No slots yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="links">
+        <a href="/examior/examior_dashboard">Back to dashboard</a>
+    </div>
+</div>
+{% endblock %}

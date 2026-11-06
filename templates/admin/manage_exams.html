@@ -18,13 +18,34 @@
         }
         th { background: #333; color: #fff; }
         td a { color: #333; }
+        form { display: flex; gap: 8px; margin-bottom: 16px; }
+        input[type="search"] {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        button {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+        }
     </style>
 
     <div class="box">
         <h1>Manage Exams</h1>
+        <form action="/admin/manage_exams" method="get">
+            <input type="search" name="q" value="{{ q or '' }}" placeholder="Search examinations by name or ID">
+            <button type="submit">Search</button>
+        </form>
         <table>
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Exam Name</th>
                     <th>Exam Description</th>
                     <th>Exam Date</th>
@@ -34,12 +55,15 @@
                     <th>Examiner Name</th>
                     <th>Create Rubric</th>
                     <th>Manage Rubric</th>
+                    <th>Booking</th>
+                    <th>Results</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for exam in exams %}
                 <tr>
+                    <td>{{ exam.id }}</td>
                     <td>{{ exam.exam_name }}</td>
                     <td>{{ exam.exam_description }}</td>
                     <td>{{ exam.exam_date }}</td>
@@ -50,13 +74,31 @@
                     <td><a href="/admin/create_rubric/{{ exam.id }}">create rubic</a></td>
                     <td><a href="/admin/manage_rubric/{{ exam.id }}">manage rubic</a></td>
                     <td>
+                        {% if exam.is_booking_open %}
+                        Open
+                        <a href="/admin/close_booking/{{ exam.id }}">Close booking</a>
+                        {% else %}
+                        Closed
+                        <a href="/admin/open_booking/{{ exam.id }}">Open booking</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if exam.results_published %}
+                        Published
+                        <a href="/admin/hide_results/{{ exam.id }}">Hide</a>
+                        {% else %}
+                        Hidden
+                        <a href="/admin/publish_results/{{ exam.id }}">Publish</a>
+                        {% endif %}
+                    </td>
+                    <td>
                         <a href="/admin/edit_exam/{{ exam.id }}">Edit</a>
                         <a href="/admin/delete_exam/{{ exam.id }}">Delete</a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="10">No exams found.</td>
+                    <td colspan="13">No examinations match that name or ID.</td>
                 </tr>
                 {% endfor %}
             </tbody>

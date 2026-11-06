@@ -30,22 +30,23 @@ def login():
         email = request.form['email']
         password = request.form['password']
         user = User.query.filter_by(email=email).first()
-        if user.password == password:
+        if user and user.password == password:
             if user.role != 'admin' and user.is_active is False:
-                return "your account is blocked"
+                return render_template('/auth/login.html', error='Your account is blocked.')
+            if user.role == 'examinor' and not user.is_verified:
+                return render_template('/auth/login.html', error='Your account is waiting for admin approval.')
             session['user_id'] = user.id
             session['role'] = user.role
             if user.role == 'admin':
                 return redirect(url_for('admin.admin_dashboard'))
-            if user.role == 'examinor' and user.is_verified == True:
-
-
+            if user.role == 'examinor':
                 return redirect(url_for('examior.examior_dashboard'))
-            elif user.role == 'examinor' and user.is_verified == False:
-                return "you are not verified"
-            if user.role =='student':
+            if user.role == 'student':
                 return redirect(url_for('user.user_dashboard'))
         else:
-            return render_template('login.html',error='Invalid email or password')
-       
-    return render_template('/auth/login.html')
+            return render_template('/auth/login.html', error='Invalid email or password')
+
+    error = None
+    if request.args.get('pending'):
+        error = 'Your account is waiting for admin approval.'
+    return render_template('/auth/login.html', error=error)

@@ -32,10 +32,21 @@
             cursor: pointer;
         }
         button:hover { background: #555; }
+        .error {
+            margin: 0 0 14px;
+            padding: 10px 12px;
+            border: 1px solid #c0392b;
+            background: #fdecea;
+            color: #922b21;
+            font-size: 14px;
+        }
     </style>
 
     <form class="card" action="/admin/create_exam" method="post">
         <h1>Create Exam</h1>
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
         <label for="exam_name">Exam Name</label>
         <input type="text" name="exam_name" id="exam_name">
         <label for="exam_description">Exam Description</label>
@@ -50,10 +61,14 @@
         <input type="time" name="slot_start_time" id="slot_start_time">
         <label for="slot_end_time">Slot End Time</label>
         <input type="time" name="slot_end_time" id="slot_end_time">
-        <label for="booking_start_time">Booking Start Time</label>
-        <input type="time" name="booking_start_time" id="booking_start_time">
-        <label for="booking_end_time">Booking End Time</label>
-        <input type="time" name="booking_end_time" id="booking_end_time">
+        <label for="slot_creation_start_date">Slot Creation Start Date</label>
+        <input type="date" name="slot_creation_start_date" id="slot_creation_start_date" required>
+        <label for="slot_creation_end_date">Slot Creation End Date</label>
+        <input type="date" name="slot_creation_end_date" id="slot_creation_end_date" required>
+        <label for="booking_open_date">Booking Opens</label>
+        <input type="date" name="booking_open_date" id="booking_open_date" required>
+        <label for="booking_close_date">Booking Closes</label>
+        <input type="date" name="booking_close_date" id="booking_close_date" required>
         <label for="examinor_id">Examiner</label>
         <select name="examinor_id" id="examinor_id">
             {% for examinor in examinors %}

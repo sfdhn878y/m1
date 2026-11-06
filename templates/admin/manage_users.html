@@ -26,12 +26,33 @@
             text-decoration: none;
             border-radius: 4px;
         }
+        form { display: flex; gap: 8px; margin-bottom: 16px; }
+        input[type="search"] {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        button {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+        }
     </style>
 
     <div class="box">
         <h1>Manage Users</h1>
+        <form action="/admin/manage_users" method="get">
+            <input type="search" name="q" value="{{ q or '' }}" placeholder="Search students by name or ID">
+            <button type="submit">Search</button>
+        </form>
         <table>
             <tr>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
@@ -40,6 +61,7 @@
             </tr>
             {% for user in users %}
             <tr>
+                <td>{{ user.id }}</td>
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.role }}</td>
@@ -52,6 +74,10 @@
                     <a href="/admin/unblock_user/{{ user.id }}">Unblock</a>
                     {% endif %}
                 </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">No students match that name or ID.</td>
             </tr>
             {% endfor %}
         </table>

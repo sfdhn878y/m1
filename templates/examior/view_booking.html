@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    h2 { margin: 18px 0 10px; font-size: 18px; }
+    p { margin: 0 0 14px; color: #333; }
+    .row { margin: 0 0 8px; font-size: 14px; }
+    .row span { display: inline-block; width: 140px; color: #555; }
+    .links { margin-top: 16px; }
+    .links a {
+        display: inline-block;
+        margin-right: 8px;
+        padding: 10px 14px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+</style>
+
+<div class="box">
+    <h1>View Booking</h1>
+    <p>{{ exam.exam_name }} — {{ exam.exam_date }} at {{ exam.exam_time.strftime('%H:%M') }}</p>
+    <p class="row"><span>Slot date</span>{{ slot.slot_date if slot else '' }}</p>
+
+    <h2>Student details</h2>
+    <p class="row"><span>Name</span>{{ student.name }}</p>
+    <p class="row"><span>Email</span>{{ student.email }}</p>
+    {% if profile %}
+    <p class="row"><span>Phone</span>{{ profile.phone }}</p>
+    <p class="row"><span>Address</span>{{ profile.address }}</p>
+    <p class="row"><span>Past experience</span>{{ profile.past_experience }}</p>
+    {% else %}
+    <p class="row"><span>Profile</span>No profile saved yet.</p>
+    {% endif %}
+
+    <h2>Remark</h2>
+    <p>{{ remark.remark if remark and remark.remark else 'No remark yet' }}</p>
+
+    <div class="links">
+        <a href="/examior/give_marks/{{ booking.id }}">Give marks</a>
+        <a href="/examior/see_bookings">Back to bookings</a>
+    </div>
+</div>
+{% endblock %}

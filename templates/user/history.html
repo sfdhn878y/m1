@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+        overflow-x: auto;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 16px; color: #333; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #333; color: #fff; }
+    td a { color: #333; }
+</style>
+
+<div class="box">
+    <h1>Examination history</h1>
+    <p>Examinations whose date or booked slot has already passed.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Exam</th>
+                <th>Exam date</th>
+                <th>Slot date</th>
+                <th>Status</th>
+                <th>Results</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in past %}
+            <tr>
+                <td>{{ item.exam.exam_name if item.exam else item.booking.exam_id }}</td>
+                <td>{{ item.exam.exam_date if item.exam else '' }}</td>
+                <td>{{ item.slot.slot_date if item.slot else '' }}</td>
+                <td>{{ item.status }}</td>
+                <td>
+                    {% if item.published %}
+                    <a href="/user/my_marks">View results</a>
+                    {% else %}
+                    Not published
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No past examinations yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

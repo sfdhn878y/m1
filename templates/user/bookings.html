@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 960px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+        overflow-x: auto;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 16px; color: #333; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #333; color: #fff; }
+    td a { color: #333; }
+</style>
+
+<div class="box">
+    <h1>My bookings</h1>
+    <p>You can cancel a booking on or before the booking deadline.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Exam</th>
+                <th>Exam date</th>
+                <th>Slot date</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Results</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in details %}
+            <tr>
+                <td>{{ item.exam.exam_name if item.exam else item.booking.exam_id }}</td>
+                <td>{{ item.exam.exam_date if item.exam else '' }}</td>
+                <td>{{ item.slot.slot_date if item.slot else '' }}</td>
+                <td>{{ item.exam.booking_close_date if item.exam and item.exam.booking_close_date else 'While booking is open' }}</td>
+                <td>{{ item.status }}</td>
+                <td>{% if item.published %}<a href="/user/my_marks">Published</a>{% else %}Not published{% endif %}</td>
+                <td>
+                    {% if item.can_cancel %}
+                    <a href="/user/cancel_booking/{{ item.booking.id }}">Cancel</a>
+                    {% else %}
+                    Deadline passed
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">You have not booked a slot yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

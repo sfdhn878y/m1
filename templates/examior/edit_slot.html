@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 14px; color: #333; }
+    label { display: block; margin-bottom: 6px; font-size: 14px; }
+    input {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+    button, .links a {
+        display: inline-block;
+        padding: 10px 14px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    .error {
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border: 1px solid #c0392b;
+        background: #fdecea;
+        color: #922b21;
+    }
+    .links { margin-top: 16px; }
+</style>
+
+<div class="box">
+    <h1>Update slot</h1>
+    <p>{{ exam.exam_name }}. You can change this date only before booking starts.</p>
+    <p>Allowed dates: {{ exam.slot_creation_start_date }} to {{ exam.slot_creation_end_date }}.</p>
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        <label for="slot_date">Slot date</label>
+        <input
+            type="date"
+            name="slot_date"
+            id="slot_date"
+            min="{{ exam.slot_creation_start_date }}"
+            max="{{ exam.slot_creation_end_date }}"
+            value="{{ slot.slot_date }}"
+            required
+        >
+        <button type="submit">Update slot</button>
+    </form>
+    <div class="links">
+        <a href="/examior/provide_slot/{{ exam.id }}">Back to slots</a>
+    </div>
+</div>
+{% endblock %}

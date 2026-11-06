@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .box {
+        max-width: 1200px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+        overflow-x: auto;
+    }
+    h1 { margin: 0 0 16px; font-size: 26px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th { background: #333; color: #fff; }
+    form { display: flex; gap: 8px; margin-bottom: 16px; }
+    input[type="search"] {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    button {
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 4px;
+        background: #333;
+        color: #fff;
+        cursor: pointer;
+    }
+</style>
+
+<div class="box">
+    <h1>View Bookings</h1>
+    <form action="/admin/view_bookings" method="get">
+        <input type="search" name="q" value="{{ q or '' }}" placeholder="Search bookings by student name, exam name, or ID">
+        <button type="submit">Search</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Booking ID</th>
+                <th>Exam</th>
+                <th>Exam date</th>
+                <th>Exam time</th>
+                <th>Slot date</th>
+                <th>Examiner</th>
+                <th>Student</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            {% set student = students.get(booking.student_id) %}
+            {% set profile = profiles.get(booking.student_id) %}
+            {% set exam = exams.get(booking.exam_id) %}
+            <tr>
+                <td>{{ booking.id }}</td>
+                <td>{{ exam.exam_name if exam else booking.exam_id }}</td>
+                <td>{{ exam.exam_date if exam else '' }}</td>
+                <td>{{ exam.exam_time.strftime('%H:%M') if exam else '' }}</td>
+                <td>{{ slots[booking.slot_id].slot_date if slots.get(booking.slot_id) else '' }}</td>
+                <td>{{ exam.examinor_name if exam else '' }}</td>
+                <td>{{ student.name if student else booking.student_id }}</td>
+                <td>{{ student.email if student else '' }}</td>
+                <td>{{ profile.phone if profile else 'No profile' }}</td>
+                <td>{{ profile.address if profile else 'No profile' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10">No bookings match that name or ID.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

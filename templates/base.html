@@ -64,8 +64,17 @@
             <a href="/admin/manage_exams">Manage Exams</a>
             <a href="/admin/manage_examinors">Manage Examinors</a>
             <a href="/admin/manage_users">Manage Users</a>
+            <a href="/admin/view_bookings">View Bookings</a>
         {% elif session['role'] == 'examinor' %}
+        <a href="/examior/see_assigned_exams">See Assigned Exams</a>
+            <a href="/examior/see_bookings">See Bookings</a>
             <a href="/examior/examior_dashboard">Examiner Dashboard</a>
+        {% elif session['role'] == 'student' %}
+            <a href="/user/user_dashboard">Student Dashboard</a>
+            <a href="/user/exams">Examinations</a>
+            <a href="/user/bookings">My Bookings</a>
+            <a href="/user/history">History</a>
+            <a href="/user/my_marks">Results</a>
         {% endif %}
 
         {% else %}
