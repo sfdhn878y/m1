@@ -3,6 +3,7 @@ from flask import Blueprint,render_template,request,redirect,url_for
 from models import *
 from flask import session
 from extension import db
+from booking_rules import mark_finished_bookings
 
 examior_blueprint = Blueprint("examior", __name__)
 
@@ -31,14 +32,13 @@ def _booking_started(exam):
 def _slot_creation_open(exam):
     if not exam.slot_creation_start_date or not exam.slot_creation_end_date:
         return False
-    today = date.today()
-    return exam.slot_creation_start_date <= today <= exam.slot_creation_end_date
+    return bool(exam.is_slot_creation_open)
 
 
 def _slot_change_allowed(exam, slot):
     if _booking_started(exam):
         return False
-    if SlotBooking.query.filter_by(slot_id=slot.id).first():
+    if SlotBooking.query.filter_by(slot_id=slot.id, status='Booked').first():
         return False
     return True
 
@@ -46,7 +46,10 @@ def _slot_change_allowed(exam, slot):
 def _examiner_bookings(examinor_id):
     assigned_exams = Exam.query.filter_by(examinor_id=examinor_id).all()
     exam_ids = [exam.id for exam in assigned_exams]
-    bookings = SlotBooking.query.filter(SlotBooking.exam_id.in_(exam_ids)).all() if exam_ids else []
+    bookings = SlotBooking.query.filter(
+        SlotBooking.exam_id.in_(exam_ids),
+        SlotBooking.status.in_(['Booked', 'Completed'])
+    ).all() if exam_ids else []
     exam_map = {exam.id: exam for exam in assigned_exams}
     slot_map = {
         slot.id: slot for slot in ExamSlot.query.filter(ExamSlot.id.in_([booking.slot_id for booking in bookings])).all()
@@ -54,6 +57,7 @@ def _examiner_bookings(examinor_id):
     student_map = {
         student.id: student for student in User.query.filter(User.id.in_([booking.student_id for booking in bookings])).all()
     } if bookings else {}
+    mark_finished_bookings(bookings, exam_map, slot_map)
     return assigned_exams, bookings, exam_map, slot_map, student_map
 
 
@@ -123,7 +127,7 @@ def view_booking(booking_id):
         return redirect(url_for('index'))
     booking = SlotBooking.query.get(booking_id)
     exam = Exam.query.get(booking.exam_id) if booking else None
-    if not booking or not exam or exam.examinor_id != session.get('user_id'):
+    if not booking or not exam or exam.examinor_id != session.get('user_id') or booking.status == 'Cancelled':
         return redirect(url_for('examior.see_bookings'))
     student = User.query.get(booking.student_id)
     profile = User_profile.query.filter_by(user_id=student.id).first()
@@ -146,7 +150,7 @@ def give_marks(booking_id):
         return redirect(url_for('index'))
     booking = SlotBooking.query.get(booking_id)
     exam = Exam.query.get(booking.exam_id) if booking else None
-    if not booking or not exam or exam.examinor_id != session.get('user_id'):
+    if not booking or not exam or exam.examinor_id != session.get('user_id') or booking.status == 'Cancelled':
         return redirect(url_for('examior.see_bookings'))
     student = User.query.get(booking.student_id)
     questions = quetionBank.query.filter_by(exam_id=exam.id).all()
@@ -262,19 +266,16 @@ def see_assigned_exams():
     return render_template('examior/see_assigned_exams.html', assigned_exams=assigned_exams, courses=courses)
 
 
-@examior_blueprint.route('/publish_results/<int:exam_id>', methods=['GET', 'POST'])
-def publish_results(exam_id):
-    exam = Exam.query.get(exam_id)
-    if not exam or exam.examinor_id != session.get('user_id'):
-        return redirect(url_for('examior.see_assigned_exams'))
-    exam.results_published = True
-    db.session.commit()
-    return redirect(url_for('examior.see_assigned_exams'))
-
-
 def _parse_date(value):
     try:
         return datetime.strptime(value, '%Y-%m-%d').date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_time(value):
+    try:
+        return datetime.strptime(value, '%H:%M').time()
     except (TypeError, ValueError):
         return None
 
@@ -289,37 +290,52 @@ def provide_slot(exam_id):
     error = None
     if request.method == 'POST':
         slot_date = _parse_date(request.form.get('slot_date'))
+        slot_time = _parse_time(request.form.get('slot_time'))
         if not exam.slot_creation_start_date or not exam.slot_creation_end_date:
             error = 'The admin has not set the slot creation dates for this exam yet.'
         elif not slot_date:
             error = 'Select a valid slot date.'
+        elif not slot_time:
+            error = 'Select a valid slot time.'
         elif not _slot_creation_open(exam):
-            error = (
-                'You can create slots only from '
-                f'{exam.slot_creation_start_date} to {exam.slot_creation_end_date}.'
-            )
+            error = 'The admin has closed slot creation for this exam.'
         elif slot_date < exam.slot_creation_start_date or slot_date > exam.slot_creation_end_date:
             error = (
                 'You can create a slot only between '
                 f'{exam.slot_creation_start_date} and '
                 f'{exam.slot_creation_end_date}, the dates set by the admin.'
             )
-        elif ExamSlot.query.filter_by(exam_id=exam.id, slot_date=slot_date).first():
-            error = 'A slot already exists on this date.'
+        elif ExamSlot.query.filter_by(exam_id=exam.id, slot_date=slot_date, slot_time=slot_time).first():
+            error = 'A slot already exists at this date and time.'
         else:
-            slot = ExamSlot(
-                exam_id=exam.id,
-                slot_date=slot_date,
-                created_by=examior_id
-            )
-            db.session.add(slot)
-            db.session.commit()
-            return redirect(url_for('examior.provide_slot', exam_id=exam.id))
+            try:
+                capacity = int(request.form.get('capacity') or 1)
+            except ValueError:
+                capacity = 0
+            if capacity < 1:
+                error = 'Slot capacity must be at least 1.'
+            else:
+                slot = ExamSlot(
+                    exam_id=exam.id,
+                    slot_date=slot_date,
+                    slot_time=slot_time,
+                    created_by=examior_id,
+                    capacity=capacity,
+                    is_closed=False
+                )
+                db.session.add(slot)
+                db.session.commit()
+                return redirect(url_for('examior.provide_slot', exam_id=exam.id))
 
-    slots = ExamSlot.query.filter_by(exam_id=exam.id).order_by(ExamSlot.slot_date).all()
+    slots = ExamSlot.query.filter_by(exam_id=exam.id).order_by(ExamSlot.slot_date, ExamSlot.slot_time).all()
     slot_ids = [slot.id for slot in slots]
-    bookings = SlotBooking.query.filter(SlotBooking.slot_id.in_(slot_ids)).all() if slot_ids else []
-    booking_by_slot = {booking.slot_id: booking for booking in bookings}
+    bookings = SlotBooking.query.filter(
+        SlotBooking.slot_id.in_(slot_ids),
+        SlotBooking.status == 'Booked'
+    ).all() if slot_ids else []
+    booking_by_slot = {}
+    for booking in bookings:
+        booking_by_slot.setdefault(booking.slot_id, []).append(booking)
     student_map = {
         student.id: student for student in User.query.filter(User.id.in_([booking.student_id for booking in bookings])).all()
     } if bookings else {}
@@ -331,7 +347,8 @@ def provide_slot(exam_id):
         booking_by_slot=booking_by_slot,
         student_map=student_map,
         booking_started=_booking_started(exam),
-        creation_open=_slot_creation_open(exam)
+        creation_open=_slot_creation_open(exam),
+        locked=request.args.get('locked')
     )
 
 
@@ -342,23 +359,27 @@ def edit_slot(slot_id):
     if not slot or not exam or exam.examinor_id != session.get('user_id'):
         return redirect(url_for('examior.see_assigned_exams'))
     if not _slot_change_allowed(exam, slot):
-        return redirect(url_for('examior.provide_slot', exam_id=exam.id))
+        return redirect(url_for('examior.provide_slot', exam_id=exam.id, locked=1))
     error = None
     if request.method == 'POST':
         slot_date = _parse_date(request.form.get('slot_date'))
+        slot_time = _parse_time(request.form.get('slot_time'))
         if not slot_date:
             error = 'Select a valid slot date.'
+        elif not slot_time:
+            error = 'Select a valid slot time.'
         elif slot_date < exam.slot_creation_start_date or slot_date > exam.slot_creation_end_date:
             error = (
                 'The slot date must stay between '
                 f'{exam.slot_creation_start_date} and {exam.slot_creation_end_date}.'
             )
         else:
-            taken = ExamSlot.query.filter_by(exam_id=exam.id, slot_date=slot_date).first()
+            taken = ExamSlot.query.filter_by(exam_id=exam.id, slot_date=slot_date, slot_time=slot_time).first()
             if taken and taken.id != slot.id:
-                error = 'A slot already exists on this date.'
+                error = 'A slot already exists at this date and time.'
             else:
                 slot.slot_date = slot_date
+                slot.slot_time = slot_time
                 db.session.commit()
                 return redirect(url_for('examior.provide_slot', exam_id=exam.id))
     return render_template('examior/edit_slot.html', exam=exam, slot=slot, error=error)
@@ -371,7 +392,7 @@ def delete_slot(slot_id):
     if not slot or not exam or slot.created_by != session.get('user_id'):
         return redirect(url_for('examior.see_assigned_exams'))
     if not _slot_change_allowed(exam, slot):
-        return redirect(url_for('examior.provide_slot', exam_id=exam.id))
+        return redirect(url_for('examior.provide_slot', exam_id=exam.id, locked=1))
     db.session.delete(slot)
     db.session.commit()
     return redirect(url_for('examior.provide_slot', exam_id=exam.id))

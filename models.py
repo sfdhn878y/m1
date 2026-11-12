@@ -46,12 +46,13 @@ class Exam(db.Model):
     slot_end_time = db.Column(db.Time,nullable=False)
     slot_creation_start_date = db.Column(db.Date,nullable=True)
     slot_creation_end_date = db.Column(db.Date,nullable=True)
+    is_slot_creation_open = db.Column(db.Boolean, nullable=False, default=False)
     booking_start_time = db.Column(db.Time,nullable=False)
     booking_end_time = db.Column(db.Time,nullable=False)
     booking_open_date = db.Column(db.Date,nullable=True)
     booking_close_date = db.Column(db.Date,nullable=True)
-    is_booking_open = db.Column(db.Boolean, default=False)
-    results_published = db.Column(db.Boolean, default=False)
+    is_booking_open = db.Column(db.Boolean, nullable=False, default=False)
+    results_published = db.Column(db.Boolean, nullable=False, default=False)
     examinor_name = db.Column(db.String(100),nullable=False)
     coures_id = db.Column(db.Integer,db.ForeignKey('course.id'),nullable=False)
     examinor_id = db.Column(db.Integer,db.ForeignKey('user.id'),nullable=False)
@@ -62,14 +63,18 @@ class ExamSlot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
     slot_date = db.Column(db.Date, nullable=False)
+    slot_time = db.Column(db.Time, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    capacity = db.Column(db.Integer, nullable=False, default=1)
+    is_closed = db.Column(db.Boolean, nullable=False, default=False)
 
 
 class SlotBooking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    slot_id = db.Column(db.Integer, db.ForeignKey('exam_slot.id'), nullable=False, unique=True)
+    slot_id = db.Column(db.Integer, db.ForeignKey('exam_slot.id'), nullable=False)
     exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='Booked')
 
 
 class quetionBank(db.Model):

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .card {
+        width: 100%;
+        max-width: 420px;
+        margin: 24px auto;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 28px;
+    }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 14px; }
+    label { display: block; margin-bottom: 6px; font-size: 14px; }
+    select, button {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+    button { border: 0; background: #333; color: #fff; cursor: pointer; }
+    .error {
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border: 1px solid #c0392b;
+        background: #fdecea;
+        color: #922b21;
+    }
+</style>
+<form class="card" action="/admin/reschedule_booking/{{ booking.id }}" method="post">
+    <h1>Reschedule booking</h1>
+    <p>{{ exam.exam_name }}. The examiner created these dates between {{ exam.slot_creation_start_date }} and {{ exam.slot_creation_end_date }}. You can move this student only to a date that still has a free seat.</p>
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+    <label for="slot_id">Examiner date</label>
+    <select name="slot_id" id="slot_id">
+        {% for slot in slots %}
+        <option value="{{ slot.id }}" {% if slot.id == booking.slot_id %}selected{% endif %}>
+            {{ slot.slot_date }} {{ slot.slot_time.strftime('%H:%M') }}{% if slot.id == booking.slot_id %} (current){% endif %}
+        </option>
+        {% else %}
+        <option value="">No free date</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

@@ -88,17 +88,27 @@
             max="{{ exam.slot_creation_end_date }}"
             required
         >
+        <label for="slot_time">Slot time</label>
+        <input type="time" name="slot_time" id="slot_time" required>
+        <label for="capacity">Capacity</label>
+        <input type="number" name="capacity" id="capacity" min="1" value="1" required>
         <button type="submit">Create slot</button>
     </form>
     {% elif exam.slot_creation_start_date and exam.slot_creation_end_date %}
-    <p class="error">Slot creation is open only from {{ exam.slot_creation_start_date }} to {{ exam.slot_creation_end_date }}.</p>
+    <p class="error">The admin has closed slot creation. You can add dates only while it is open.</p>
     {% endif %}
 
     <h2>Slots you created</h2>
+    {% if locked %}
+    <p class="error">Booking has started, so this slot can no longer be updated or removed.</p>
+    {% endif %}
+    <p>You can update or remove a slot before booking starts, as long as no student has booked it.</p>
     <table>
         <thead>
             <tr>
                 <th>Date</th>
+                <th>Time</th>
+                <th>Booked</th>
                 <th>Booked by</th>
                 <th>Action</th>
             </tr>
@@ -107,16 +117,25 @@
             {% for slot in slots %}
             <tr>
                 <td>{{ slot.slot_date }}</td>
+                <td>{{ slot.slot_time.strftime('%H:%M') }}</td>
                 <td>
-                    {% set booking = booking_by_slot.get(slot.id) %}
-                    {% if booking and student_map.get(booking.student_id) %}
-                    {{ student_map[booking.student_id].name }} ({{ student_map[booking.student_id].email }})
+                    {{ booking_by_slot.get(slot.id, [])|length }} / {{ slot.capacity or 1 }}
+                    {% if slot.is_closed %}Closed{% endif %}
+                </td>
+                <td>
+                    {% set bookings = booking_by_slot.get(slot.id, []) %}
+                    {% if bookings %}
+                        {% for booking in bookings %}
+                            {% if student_map.get(booking.student_id) %}
+                            {{ student_map[booking.student_id].name }}{% if not loop.last %}, {% endif %}
+                            {% endif %}
+                        {% endfor %}
                     {% else %}
                     Not booked
                     {% endif %}
                 </td>
                 <td>
-                    {% if booking %}
+                    {% if bookings %}
                     Booked
                     {% elif booking_started %}
                     Booking has started
@@ -128,7 +147,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="3">No slots yet.</td>
+                <td colspan="5">No slots yet.</td>
             </tr>
             {% endfor %}
         </tbody>

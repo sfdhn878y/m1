@@ -60,7 +60,8 @@ def _booking_matches(term, booking, exam, student):
 def manage_exams():
     q = _query_text()
     exams = [exam for exam in Exam.query.all() if _matches_name_or_id(q, exam.id, exam.exam_name)]
-    return render_template('/admin/manage_exams.html', exams=exams, q=q)
+    phases = {exam.id: exam_phase(exam) for exam in exams}
+    return render_template('/admin/manage_exams.html', exams=exams, q=q, phases=phases)
 
 
 @admin_blueprint.route('/edit_course/<int:id>',methods=['POST','GET'])
@@ -109,7 +110,20 @@ def delete(id):
     return redirect(url_for('admin.manage_courses'))
 
 from datetime import datetime
+from booking_rules import exam_phase, display_status, refresh_slot_closed, slot_is_full, mark_finished_bookings
 from flask import request, render_template, redirect, url_for
+
+
+def _exam_date_order_error(exam_date, slot_start, slot_end, booking_open, booking_close):
+    if slot_end < slot_start:
+        return 'Slot creation end date must be on or after the start date.'
+    if booking_open <= slot_end:
+        return 'Booking must open after the slot creation end date.'
+    if booking_close < booking_open:
+        return 'Booking close date must be on or after the date booking opens.'
+    if exam_date < booking_close:
+        return 'Exam date must be on or after the day booking closes.'
+    return None
 
 @admin_blueprint.route('/create_exam', methods=['POST', 'GET'])
 def create_exam():
@@ -126,44 +140,31 @@ def create_exam():
             request.form['exam_date'], '%Y-%m-%d'
         ).date()
 
-        exam_time = datetime.strptime(
-            request.form['exam_time'], '%H:%M'
-        ).time()
-
-        slot_start_time = datetime.strptime(
-            request.form['slot_start_time'], '%H:%M'
-        ).time()
-
-        slot_end_time = datetime.strptime(
-            request.form['slot_end_time'], '%H:%M'
-        ).time()
-
         booking_open_date = datetime.strptime(
             request.form['booking_open_date'], '%Y-%m-%d'
         ).date()
         booking_close_date = datetime.strptime(
             request.form['booking_close_date'], '%Y-%m-%d'
         ).date()
-        if booking_close_date < booking_open_date:
-            return render_template(
-                '/admin/create_exam.html',
-                examinors=examinors,
-                courses=courses,
-                error='Booking close date must be on or after the date booking opens.'
-            )
-
         slot_creation_start_date = datetime.strptime(
             request.form['slot_creation_start_date'], '%Y-%m-%d'
         ).date()
         slot_creation_end_date = datetime.strptime(
             request.form['slot_creation_end_date'], '%Y-%m-%d'
         ).date()
-        if slot_creation_end_date < slot_creation_start_date:
+        date_error = _exam_date_order_error(
+            exam_date,
+            slot_creation_start_date,
+            slot_creation_end_date,
+            booking_open_date,
+            booking_close_date,
+        )
+        if date_error:
             return render_template(
                 '/admin/create_exam.html',
                 examinors=examinors,
                 courses=courses,
-                error='Slot creation end date must be on or after the start date.'
+                error=date_error
             )
 
         exam_duration = int(request.form['exam_duration'])
@@ -176,10 +177,10 @@ def create_exam():
             exam_name=exam_name,
             exam_description=exam_description,
             exam_date=exam_date,
-            exam_time=exam_time,
+            exam_time=datetime.strptime('00:00', '%H:%M').time(),
             exam_duration=exam_duration,
-            slot_start_time=slot_start_time,
-            slot_end_time=slot_end_time,
+            slot_start_time=datetime.strptime('00:00', '%H:%M').time(),
+            slot_end_time=datetime.strptime('00:00', '%H:%M').time(),
             slot_creation_start_date=slot_creation_start_date,
             slot_creation_end_date=slot_creation_end_date,
             booking_start_time=datetime.strptime('00:00', '%H:%M').time(),
@@ -281,19 +282,21 @@ def edit_exam(id):
         exam.exam_name = request.form['exam_name']
         exam.exam_description = request.form['exam_description']
         exam.exam_date = datetime.strptime(request.form['exam_date'], '%Y-%m-%d').date()
-        exam.exam_time = datetime.strptime(request.form['exam_time'], '%H:%M').time()
-        exam.slot_start_time = datetime.strptime(request.form['slot_start_time'], '%H:%M').time()
-        exam.slot_end_time = datetime.strptime(request.form['slot_end_time'], '%H:%M').time()
         slot_creation_start_date = datetime.strptime(request.form['slot_creation_start_date'], '%Y-%m-%d').date()
         slot_creation_end_date = datetime.strptime(request.form['slot_creation_end_date'], '%Y-%m-%d').date()
-        if slot_creation_end_date < slot_creation_start_date:
-            return show('Slot creation end date must be on or after the start date.')
-        exam.slot_creation_start_date = slot_creation_start_date
-        exam.slot_creation_end_date = slot_creation_end_date
         booking_open_date = datetime.strptime(request.form['booking_open_date'], '%Y-%m-%d').date()
         booking_close_date = datetime.strptime(request.form['booking_close_date'], '%Y-%m-%d').date()
-        if booking_close_date < booking_open_date:
-            return show('Booking close date must be on or after the date booking opens.')
+        date_error = _exam_date_order_error(
+            exam.exam_date,
+            slot_creation_start_date,
+            slot_creation_end_date,
+            booking_open_date,
+            booking_close_date,
+        )
+        if date_error:
+            return show(date_error)
+        exam.slot_creation_start_date = slot_creation_start_date
+        exam.slot_creation_end_date = slot_creation_end_date
         exam.booking_open_date = booking_open_date
         exam.booking_close_date = booking_close_date
         exam.exam_duration = int(request.form['exam_duration'])
@@ -318,6 +321,24 @@ def delete_exam(id):
     exam = Exam.query.get(id)
     db.session.delete(exam)
     db.session.commit()
+    return redirect(url_for('admin.manage_exams'))
+
+
+@admin_blueprint.route('/open_slot_creation/<int:id>')
+def open_slot_creation(id):
+    exam = Exam.query.get(id)
+    if exam:
+        exam.is_slot_creation_open = True
+        db.session.commit()
+    return redirect(url_for('admin.manage_exams'))
+
+
+@admin_blueprint.route('/close_slot_creation/<int:id>')
+def close_slot_creation(id):
+    exam = Exam.query.get(id)
+    if exam:
+        exam.is_slot_creation_open = False
+        db.session.commit()
     return redirect(url_for('admin.manage_exams'))
 
 
@@ -369,6 +390,7 @@ def view_bookings():
     ]
     slots = {slot.id: slot for slot in ExamSlot.query.filter(ExamSlot.id.in_([booking.slot_id for booking in bookings])).all()} if bookings else {}
     profiles = {profile.user_id: profile for profile in User_profile.query.filter(User_profile.user_id.in_([booking.student_id for booking in bookings])).all()} if bookings else {}
+    mark_finished_bookings(bookings, exams, slots)
     return render_template(
         '/admin/view_bookings.html',
         bookings=bookings,
@@ -376,8 +398,58 @@ def view_bookings():
         slots=slots,
         students=students,
         profiles=profiles,
-        q=q
+        q=q,
+        display_status=display_status
     )
+
+
+@admin_blueprint.route('/reschedule_booking/<int:booking_id>', methods=['GET', 'POST'])
+def reschedule_booking(booking_id):
+    booking = SlotBooking.query.get(booking_id)
+    exam = Exam.query.get(booking.exam_id) if booking else None
+    if not booking or not exam or booking.status == 'Cancelled':
+        return redirect(url_for('admin.view_bookings'))
+    all_slots = ExamSlot.query.filter_by(exam_id=exam.id).order_by(ExamSlot.slot_date, ExamSlot.slot_time).all()
+    slots = [
+        slot for slot in all_slots
+        if slot.id == booking.slot_id or not slot_is_full(slot)
+    ]
+    error = None
+    if request.method == 'POST':
+        slot = ExamSlot.query.get(request.form.get('slot_id'))
+        if not slot or slot.exam_id != exam.id or slot.created_by != exam.examinor_id:
+            error = 'Choose a date the examiner created for this exam.'
+        elif slot.id != booking.slot_id and slot_is_full(slot):
+            error = 'That date is full. Choose a free date.'
+        else:
+            old = ExamSlot.query.get(booking.slot_id)
+            booking.slot_id = slot.id
+            booking.status = 'Booked'
+            db.session.flush()
+            refresh_slot_closed(slot)
+            if old:
+                refresh_slot_closed(old)
+            db.session.commit()
+            return redirect(url_for('admin.view_bookings'))
+    return render_template(
+        '/admin/reschedule_booking.html',
+        booking=booking,
+        exam=exam,
+        slots=slots,
+        error=error
+    )
+
+
+@admin_blueprint.route('/cancel_booking/<int:booking_id>')
+def cancel_booking(booking_id):
+    booking = SlotBooking.query.get(booking_id)
+    if booking and booking.status == 'Booked':
+        booking.status = 'Cancelled'
+        slot = ExamSlot.query.get(booking.slot_id)
+        if slot:
+            refresh_slot_closed(slot)
+        db.session.commit()
+    return redirect(url_for('admin.view_bookings'))
 
 
 @admin_blueprint.route('/manage_examinors',methods=['POST','GET'])

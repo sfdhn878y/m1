@@ -83,7 +83,6 @@
                     <th>Exam</th>
                     <th>Course</th>
                     <th>Date</th>
-                    <th>Time</th>
                     <th>Duration</th>
                     <th>Examiner</th>
                     <th>Booking</th>
@@ -95,14 +94,13 @@
                     <td>{{ exam.exam_name }}</td>
                     <td>{{ courses[exam.coures_id].coures_name if courses.get(exam.coures_id) else exam.coures_id }}</td>
                     <td>{{ exam.exam_date }}</td>
-                    <td>{{ exam.exam_time.strftime('%H:%M') }}</td>
                     <td>{{ exam.exam_duration }} min</td>
                     <td>{{ exam.examinor_name }}</td>
-                    <td>{% if exam.is_booking_open %}Open{% else %}Closed{% endif %}</td>
+                    <td>{{ phases.get(exam.id, 'Draft') }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7">No exams yet.</td>
+                    <td colspan="6">No exams yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -115,6 +113,7 @@
                 <tr>
                     <th>Exam</th>
                     <th>Slot date</th>
+                    <th>Slot time</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -123,10 +122,13 @@
                 <tr>
                     <td>{{ exam_map[slot.exam_id].exam_name if exam_map.get(slot.exam_id) else slot.exam_id }}</td>
                     <td>{{ slot.slot_date }}</td>
+                    <td>{{ slot.slot_time.strftime('%H:%M') }}</td>
                     <td>
                         {% set slot_exam = exam_map.get(slot.exam_id) %}
-                        {% if slot_exam and slot_exam.is_booking_open %}
+                        {% if can_book.get(slot.exam_id) %}
                         <a class="button" href="/user/book_slot/{{ slot.id }}">Book slot</a>
+                        {% elif slot_exam and slot_exam.booking_open_date and today < slot_exam.booking_open_date %}
+                        Booking opens {{ slot_exam.booking_open_date }}
                         {% else %}
                         Booking is closed
                         {% endif %}
@@ -134,7 +136,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3">No open slots right now.</td>
+                    <td colspan="4">No open slots right now.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -146,7 +148,6 @@
                 <tr>
                     <th>Exam</th>
                     <th>Exam date</th>
-                    <th>Exam time</th>
                     <th>Slot date</th>
                     <th>Status</th>
                     <th>Results</th>
@@ -158,8 +159,7 @@
                 <tr>
                     <td>{{ exam_map[booking.exam_id].exam_name if exam_map.get(booking.exam_id) else booking.exam_id }}</td>
                     <td>{{ exam_map[booking.exam_id].exam_date if exam_map.get(booking.exam_id) else '' }}</td>
-                    <td>{{ exam_map[booking.exam_id].exam_time.strftime('%H:%M') if exam_map.get(booking.exam_id) else '' }}</td>
-                    <td>{{ slot_map[booking.slot_id].slot_date if slot_map.get(booking.slot_id) else '' }}</td>
+                    <td>{{ slot_map[booking.slot_id].slot_date if slot_map.get(booking.slot_id) else '' }} {{ slot_map[booking.slot_id].slot_time.strftime('%H:%M') if slot_map.get(booking.slot_id) else '' }}</td>
                     <td>{{ statuses[booking.id] }}</td>
                     <td>
                         {% if mark_summary[booking.id].published and mark_summary[booking.id].awarded is not none %}
@@ -180,7 +180,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7">You have not booked a slot yet.</td>
+                    <td colspan="6">You have not booked a slot yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>

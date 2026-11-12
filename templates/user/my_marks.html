@@ -26,7 +26,7 @@
     <p>Published marks and the examiner's remark for your exams.</p>
     {% for exam in exams %}
     <h2>{{ exam.exam_name }}</h2>
-    <p>{{ exam.exam_date }} at {{ exam.exam_time.strftime('%H:%M') }}</p>
+    <p>{{ exam.exam_date }}</p>
     {% if not exam.results_published %}
     <p>Results are not published yet.</p>
     {% else %}

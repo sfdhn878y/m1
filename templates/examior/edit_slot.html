@@ -59,6 +59,8 @@
             value="{{ slot.slot_date }}"
             required
         >
+        <label for="slot_time">Slot time</label>
+        <input type="time" name="slot_time" id="slot_time" value="{{ slot.slot_time.strftime('%H:%M') }}" required>
         <button type="submit">Update slot</button>
     </form>
     <div class="links">

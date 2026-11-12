@@ -47,10 +47,11 @@
                 <th>Booking ID</th>
                 <th>Exam</th>
                 <th>Exam date</th>
-                <th>Exam time</th>
                 <th>Slot date</th>
                 <th>Examiner</th>
                 <th>Student</th>
+                <th>Status</th>
+                <th>Action</th>
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Address</th>
@@ -65,17 +66,23 @@
                 <td>{{ booking.id }}</td>
                 <td>{{ exam.exam_name if exam else booking.exam_id }}</td>
                 <td>{{ exam.exam_date if exam else '' }}</td>
-                <td>{{ exam.exam_time.strftime('%H:%M') if exam else '' }}</td>
-                <td>{{ slots[booking.slot_id].slot_date if slots.get(booking.slot_id) else '' }}</td>
+                <td>{{ slots[booking.slot_id].slot_date if slots.get(booking.slot_id) else '' }} {{ slots[booking.slot_id].slot_time.strftime('%H:%M') if slots.get(booking.slot_id) else '' }}</td>
                 <td>{{ exam.examinor_name if exam else '' }}</td>
                 <td>{{ student.name if student else booking.student_id }}</td>
+                <td>{{ display_status(booking) }}</td>
+                <td>
+                    {% if booking.status == 'Booked' %}
+                    <a href="/admin/reschedule_booking/{{ booking.id }}">Reschedule</a>
+                    <a href="/admin/cancel_booking/{{ booking.id }}">Cancel</a>
+                    {% endif %}
+                </td>
                 <td>{{ student.email if student else '' }}</td>
                 <td>{{ profile.phone if profile else 'No profile' }}</td>
                 <td>{{ profile.address if profile else 'No profile' }}</td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="10">No bookings match that name or ID.</td>
+                <td colspan="11">No bookings match that name or ID.</td>
             </tr>
             {% endfor %}
         </tbody>

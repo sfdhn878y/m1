@@ -19,7 +19,7 @@
 
 <div class="box">
     <h1>My bookings</h1>
-    <p>You can cancel a booking on or before the booking deadline.</p>
+    <p>Booked, cancelled, and completed bookings are listed here. You can cancel a booking on or before the booking deadline.</p>
     <table>
         <thead>
             <tr>
@@ -37,12 +37,14 @@
             <tr>
                 <td>{{ item.exam.exam_name if item.exam else item.booking.exam_id }}</td>
                 <td>{{ item.exam.exam_date if item.exam else '' }}</td>
-                <td>{{ item.slot.slot_date if item.slot else '' }}</td>
+                <td>{{ item.slot.slot_date if item.slot else '' }} {{ item.slot.slot_time.strftime('%H:%M') if item.slot else '' }}</td>
                 <td>{{ item.exam.booking_close_date if item.exam and item.exam.booking_close_date else 'While booking is open' }}</td>
                 <td>{{ item.status }}</td>
                 <td>{% if item.published %}<a href="/user/my_marks">Published</a>{% else %}Not published{% endif %}</td>
                 <td>
-                    {% if item.can_cancel %}
+                    {% if item.status == 'Cancelled' %}
+                    Cancelled
+                    {% elif item.can_cancel %}
                     <a href="/user/cancel_booking/{{ item.booking.id }}">Cancel</a>
                     {% else %}
                     Deadline passed

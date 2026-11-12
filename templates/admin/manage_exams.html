@@ -49,12 +49,13 @@
                     <th>Exam Name</th>
                     <th>Exam Description</th>
                     <th>Exam Date</th>
-                    <th>Exam Time</th>
                     <th>Exam Duration</th>
                     <th>Course Name</th>
                     <th>Examiner Name</th>
+                    <th>Status</th>
                     <th>Create Rubric</th>
                     <th>Manage Rubric</th>
+                    <th>Slot creation</th>
                     <th>Booking</th>
                     <th>Results</th>
                     <th>Actions</th>
@@ -67,12 +68,21 @@
                     <td>{{ exam.exam_name }}</td>
                     <td>{{ exam.exam_description }}</td>
                     <td>{{ exam.exam_date }}</td>
-                    <td>{{ exam.exam_time }}</td>
                     <td>{{ exam.exam_duration }}</td>
                     <td>{{ exam.users.name }}</td>
                     <td>{{ exam.examinor_name }}</td>
+                    <td>{{ phases[exam.id] }}</td>
                     <td><a href="/admin/create_rubric/{{ exam.id }}">create rubic</a></td>
                     <td><a href="/admin/manage_rubric/{{ exam.id }}">manage rubic</a></td>
+                    <td>
+                        {% if exam.is_slot_creation_open %}
+                        Open
+                        <a href="/admin/close_slot_creation/{{ exam.id }}">Close</a>
+                        {% else %}
+                        Closed
+                        <a href="/admin/open_slot_creation/{{ exam.id }}">Open</a>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if exam.is_booking_open %}
                         Open
@@ -98,7 +108,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="13">No examinations match that name or ID.</td>
+                    <td colspan="14">No examinations match that name or ID.</td>
                 </tr>
                 {% endfor %}
             </tbody>

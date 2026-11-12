@@ -3,10 +3,22 @@ from flask import Blueprint,render_template,request,redirect,url_for
 from models import *
 from flask import session
 from extension import db
+from booking_rules import (
+    booking_window_open,
+    exam_phase,
+    display_status,
+    mark_finished_bookings,
+    slot_is_full,
+    refresh_slot_closed,
+    active_counts,
+)
 
 
-def booking_is_open(exam, today=None):
-    return bool(exam and exam.is_booking_open)
+def _slot_visible(exam, today=None):
+    today = today or date.today()
+    if booking_window_open(exam, today):
+        return True
+    return bool(exam and exam.is_slot_creation_open)
 
 
 def cancellation_open(exam, today=None):
@@ -16,15 +28,6 @@ def cancellation_open(exam, today=None):
     if exam.booking_close_date:
         return today <= exam.booking_close_date
     return bool(exam.is_booking_open)
-
-
-def booking_status(exam, slot, today=None):
-    today = today or date.today()
-    if exam and exam.exam_date and exam.exam_date < today:
-        return 'Completed'
-    if slot and slot.slot_date and slot.slot_date < today:
-        return 'Completed'
-    return 'Booked'
 
 
 def _matches_exam(term, exam):
@@ -47,14 +50,17 @@ def user_dashboard():
     exams = Exam.query.order_by(Exam.exam_date).all()
     courses = {course.id: course for course in Course.query.all()}
     bookings = SlotBooking.query.filter_by(student_id=user_id).all()
-    booked_exam_ids = {booking.exam_id for booking in bookings}
-    taken_slot_ids = {booking.slot_id for booking in SlotBooking.query.all()}
-    open_slots = [
-        slot for slot in ExamSlot.query.order_by(ExamSlot.slot_date).all()
-        if slot.id not in taken_slot_ids and slot.exam_id not in booked_exam_ids
-    ]
     exam_map = {exam.id: exam for exam in exams}
     slot_map = {slot.id: slot for slot in ExamSlot.query.all()}
+    mark_finished_bookings(bookings, exam_map, slot_map)
+    counts = active_counts()
+    booked_exam_ids = {booking.exam_id for booking in bookings if booking.status == 'Booked'}
+    open_slots = [
+        slot for slot in ExamSlot.query.order_by(ExamSlot.slot_date).all()
+        if not slot_is_full(slot, counts)
+        and slot.exam_id not in booked_exam_ids
+        and _slot_visible(exam_map.get(slot.exam_id))
+    ]
     mark_summary = {}
     if bookings:
         exam_ids = {booking.exam_id for booking in bookings}
@@ -76,13 +82,10 @@ def user_dashboard():
                 'published': bool(exam_map[booking.exam_id].results_published)
             }
     cancel_open = {
-        booking.id: cancellation_open(exam_map.get(booking.exam_id), date.today())
+        booking.id: booking.status == 'Booked' and cancellation_open(exam_map.get(booking.exam_id), date.today())
         for booking in bookings
     }
-    statuses = {
-        booking.id: booking_status(exam_map.get(booking.exam_id), slot_map.get(booking.slot_id), date.today())
-        for booking in bookings
-    }
+    statuses = {booking.id: display_status(booking) for booking in bookings}
     return render_template(
         'user/user_dashboard.html',
         user=user,
@@ -96,6 +99,8 @@ def user_dashboard():
         mark_summary=mark_summary,
         cancel_open=cancel_open,
         statuses=statuses,
+        phases={exam.id: exam_phase(exam) for exam in exams},
+        can_book={exam.id: booking_window_open(exam) for exam in exams},
         today=date.today()
     )
 
@@ -120,11 +125,17 @@ def exams():
     courses = Course.query.order_by(Course.coures_name).all()
     course_map = {course.id: course for course in courses}
     user_id = session.get('user_id')
-    booked_exam_ids = {booking.exam_id for booking in SlotBooking.query.filter_by(student_id=user_id).all()}
-    taken_slot_ids = {booking.slot_id for booking in SlotBooking.query.all()}
+    student_bookings = SlotBooking.query.filter_by(student_id=user_id, status='Booked').all()
+    booked_exam_ids = {booking.exam_id for booking in student_bookings}
+    counts = active_counts()
+    exam_lookup = {exam.id: exam for exam in Exam.query.all()}
     slots_by_exam = {}
     for slot in ExamSlot.query.order_by(ExamSlot.slot_date).all():
-        if slot.id not in taken_slot_ids and slot.exam_id not in booked_exam_ids:
+        if (
+            _slot_visible(exam_lookup.get(slot.exam_id))
+            and not slot_is_full(slot, counts)
+            and slot.exam_id not in booked_exam_ids
+        ):
             slots_by_exam.setdefault(slot.exam_id, []).append(slot)
     visible = []
     for exam in Exam.query.order_by(Exam.exam_date).all():
@@ -151,7 +162,10 @@ def exams():
         q=term,
         course_filter=course_filter,
         booking_filter=booking_filter,
-        when_filter=when_filter
+        when_filter=when_filter,
+        phases={exam.id: exam_phase(exam) for exam in visible},
+        can_book={exam.id: booking_window_open(exam) for exam in visible},
+        today=today
     )
 
 
@@ -162,6 +176,7 @@ def bookings():
     user_id = session.get('user_id')
     rows, exams, slots = _student_records(user_id)
     today = date.today()
+    mark_finished_bookings(rows, exams, slots, today)
     details = []
     for booking in rows:
         exam = exams.get(booking.exam_id)
@@ -170,8 +185,8 @@ def bookings():
             'booking': booking,
             'exam': exam,
             'slot': slot,
-            'status': booking_status(exam, slot, today),
-            'can_cancel': cancellation_open(exam, today),
+            'status': display_status(booking),
+            'can_cancel': booking.status == 'Booked' and cancellation_open(exam, today),
             'published': bool(exam and exam.results_published)
         })
     return render_template('user/bookings.html', details=details)
@@ -184,18 +199,17 @@ def history():
     user_id = session.get('user_id')
     rows, exams, slots = _student_records(user_id)
     today = date.today()
+    mark_finished_bookings(rows, exams, slots, today)
     past = []
     for booking in rows:
         exam = exams.get(booking.exam_id)
         slot = slots.get(booking.slot_id)
-        exam_done = exam and exam.exam_date and exam.exam_date < today
-        slot_done = slot and slot.slot_date and slot.slot_date < today
-        if exam_done or slot_done:
+        if booking.status in ('Completed', 'Cancelled'):
             past.append({
                 'booking': booking,
                 'exam': exam,
                 'slot': slot,
-                'status': 'Completed',
+                'status': display_status(booking),
                 'published': bool(exam and exam.results_published)
             })
     past.sort(key=lambda item: item['exam'].exam_date if item['exam'] else date.min, reverse=True)
@@ -245,11 +259,19 @@ def book_slot(slot_id):
     if not slot:
         return redirect(url_for('user.user_dashboard'))
     exam = Exam.query.get(slot.exam_id)
-    already_taken = SlotBooking.query.filter_by(slot_id=slot.id).first()
-    already_booked_exam = SlotBooking.query.filter_by(student_id=student_id, exam_id=slot.exam_id).first()
-    if booking_is_open(exam) and not already_taken and not already_booked_exam:
-        booking = SlotBooking(slot_id=slot.id, exam_id=slot.exam_id, student_id=student_id)
+    already_booked_exam = SlotBooking.query.filter_by(
+        student_id=student_id, exam_id=slot.exam_id, status='Booked'
+    ).first()
+    if booking_window_open(exam) and not slot_is_full(slot) and not already_booked_exam:
+        booking = SlotBooking(
+            slot_id=slot.id,
+            exam_id=slot.exam_id,
+            student_id=student_id,
+            status='Booked'
+        )
         db.session.add(booking)
+        db.session.flush()
+        refresh_slot_closed(slot)
         db.session.commit()
     return redirect(url_for('user.user_dashboard'))
 
@@ -261,8 +283,11 @@ def cancel_booking(booking_id):
     booking = SlotBooking.query.get(booking_id)
     if booking and booking.student_id == session.get('user_id'):
         exam = Exam.query.get(booking.exam_id)
-        if cancellation_open(exam):
-            db.session.delete(booking)
+        if booking.status == 'Booked' and cancellation_open(exam):
+            booking.status = 'Cancelled'
+            slot = ExamSlot.query.get(booking.slot_id)
+            if slot:
+                refresh_slot_closed(slot)
             db.session.commit()
     return redirect(url_for('user.bookings'))
 

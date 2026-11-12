@@ -52,7 +52,7 @@
 
 <div class="box">
     <h1>Give marks</h1>
-    <p>{{ exam.exam_name }} — {{ exam.exam_date }} at {{ exam.exam_time.strftime('%H:%M') }}</p>
+    <p>{{ exam.exam_name }} — {{ exam.exam_date }}</p>
     <p>Student: {{ student.name }} ({{ student.email }})</p>
     {% if error %}
     <p class="error">{{ error }}</p>

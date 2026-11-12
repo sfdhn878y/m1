@@ -19,7 +19,7 @@
 
 <div class="box">
     <h1>Examination history</h1>
-    <p>Examinations whose date or booked slot has already passed.</p>
+    <p>Completed and cancelled bookings for your account. Results and feedback stay on the Results page.</p>
     <table>
         <thead>
             <tr>
@@ -35,7 +35,7 @@
             <tr>
                 <td>{{ item.exam.exam_name if item.exam else item.booking.exam_id }}</td>
                 <td>{{ item.exam.exam_date if item.exam else '' }}</td>
-                <td>{{ item.slot.slot_date if item.slot else '' }}</td>
+                <td>{{ item.slot.slot_date if item.slot else '' }} {{ item.slot.slot_time.strftime('%H:%M') if item.slot else '' }}</td>
                 <td>{{ item.status }}</td>
                 <td>
                     {% if item.published %}

@@ -66,7 +66,6 @@
                 <th>Exam</th>
                 <th>Course</th>
                 <th>Date</th>
-                <th>Time</th>
                 <th>Booking</th>
                 <th>Slots</th>
             </tr>
@@ -78,17 +77,16 @@
                 <td>{{ exam.exam_name }}</td>
                 <td>{{ course_map[exam.coures_id].coures_name if course_map.get(exam.coures_id) else exam.coures_id }}</td>
                 <td>{{ exam.exam_date }}</td>
-                <td>{{ exam.exam_time.strftime('%H:%M') }}</td>
-                <td>{% if exam.is_booking_open %}Available{% else %}Closed{% endif %}</td>
+                <td>{{ phases.get(exam.id, 'Draft') }}</td>
                 <td>
                     {% if exam.id in booked_exam_ids %}
                     Booked
                     {% else %}
                         {% for slot in slots_by_exam.get(exam.id, []) %}
-                            {% if exam.is_booking_open %}
-                            <a href="/user/book_slot/{{ slot.id }}">Book {{ slot.slot_date }}</a>
+                            {% if can_book.get(exam.id) %}
+                            <a href="/user/book_slot/{{ slot.id }}">Book {{ slot.slot_date }} {{ slot.slot_time.strftime('%H:%M') }}</a>
                             {% else %}
-                            {{ slot.slot_date }}
+                            {{ slot.slot_date }} {{ slot.slot_time.strftime('%H:%M') }}
                             {% endif %}
                         {% else %}
                         No open slot
@@ -98,7 +96,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="7">No examinations match that search.</td>
+                <td colspan="6">No examinations match that search.</td>
             </tr>
             {% endfor %}
         </tbody>

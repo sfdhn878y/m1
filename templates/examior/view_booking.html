@@ -27,8 +27,9 @@
 
 <div class="box">
     <h1>View Booking</h1>
-    <p>{{ exam.exam_name }} — {{ exam.exam_date }} at {{ exam.exam_time.strftime('%H:%M') }}</p>
+    <p>{{ exam.exam_name }} — {{ exam.exam_date }}</p>
     <p class="row"><span>Slot date</span>{{ slot.slot_date if slot else '' }}</p>
+    <p class="row"><span>Slot time</span>{{ slot.slot_time.strftime('%H:%M') if slot else '' }}</p>
 
     <h2>Student details</h2>
     <p class="row"><span>Name</span>{{ student.name }}</p>
