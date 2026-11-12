@@ -54,3 +54,13 @@ def edit_profile():
         db.session.commit()
         return redirect(url_for('examior.examior_dashboard'))
     return render_template('examior/edit_profile.html', profile=profile)
+
+
+
+
+@examior_blueprint.route('/see_assigned_exams',methods=['POST','GET'])
+def see_assigned_exams():
+    examior_id = session.get('user_id')
+    assigned_exams = Exam.query.filter_by(examinor_id=examior_id).all()
+    courses = {course.id: course for course in Course.query.all()}
+    return render_template('examior/see_assigned_exams.html', assigned_exams=assigned_exams, courses=courses)
